@@ -195,6 +195,6 @@ If you encounter any issues:
 
 ## Version History
 
-- **v1.2** - Per‑PDF output folders (`<name>_image`), automatic opening of the output folder after success, improved robust handling of quoted/absolute input paths, and a single final exit instead of multiple pauses
-- **v1.1** - Added local PDF detection and selection at startup; selected file is used automatically for conversion (no auto-open)
-- **v1.0** - Initial release with basic PDF to image conversion functionality
+- **v1.2** - Per‑PDF output folders (`<name>_image`), automatic opening of the output folder after success, improved robust handling of quoted/absolute input paths, and a single final exit instead of multiple pauses.
+- **v1.1** - Added local PDF detection and selection at startup; selected file is used automatically for conversion (no auto-open).
+- **v1.0** - Initial release with basic PDF to image conversion functionality.

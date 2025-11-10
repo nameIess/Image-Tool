@@ -1,4 +1,5 @@
 @echo off
+title PDF to Image Converter
 setlocal enabledelayedexpansion
 
 :: PDF to Image Converter using ImageMagick
@@ -15,8 +16,8 @@ set "DEF_PREFIX=Page-"
 
 echo.
 echo =========================================================
-echo *                    PDF to Image Converter             *        
-echo *                      Using ImageMagick                *        
+echo *                 PDF to Image Converter                *        
+echo *                   Using ImageMagick                   *        
 echo =========================================================
 echo.
 
