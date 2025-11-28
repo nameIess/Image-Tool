@@ -1,9 +1,9 @@
 @echo off
-title PDF to Image Converter
+title Image Converter Suite
 setlocal enabledelayedexpansion
 
-:: PDF to Image Converter using ImageMagick
-:: =======================================
+:: Image Converter Suite using ImageMagick
+:: ========================================
 
 :: -----------------------------------------------------------------
 :: Centralized Defaults (edit here to change script default values)
@@ -12,8 +12,43 @@ set "DEF_OUTPUT_FORMAT=png"
 set "DEF_DENSITY=180"
 set "DEF_QUALITY=90"
 set "DEF_PREFIX=Page-"
+set "DEF_CONVERT_FORMAT=png"
 :: -----------------------------------------------------------------
 
+:main_menu
+cls
+echo.
+echo =========================================================
+echo *              Image Converter Suite                    *        
+echo *                Using ImageMagick                      *        
+echo =========================================================
+echo.
+echo Select an operation:
+echo.
+echo   1. PDF to Image Converter
+echo   2. Convert Image Format
+echo   0. Exit
+echo.
+set /p menu_choice="Enter your choice (default: 1): "
+if "%menu_choice%"=="" set "menu_choice=1"
+
+if "%menu_choice%"=="0" goto exit_script
+if "%menu_choice%"=="1" goto pdf_converter
+if "%menu_choice%"=="2" goto image_format_converter
+
+
+echo [ERROR] Invalid choice!
+timeout /t 2 >nul
+goto main_menu
+
+:exit_script
+echo.
+echo Exiting... Goodbye!
+timeout /t 1 >nul
+exit /b 0
+
+:pdf_converter
+cls
 echo.
 echo =========================================================
 echo *                 PDF to Image Converter                *        
@@ -34,6 +69,7 @@ if %errorlevel% neq 0 (
 :: Check for PDF files in the script directory and offer to open one
 echo.
 echo -- Local PDF detection --
+echo.
 set "script_dir=%~dp0"
 set "found=0"
 pushd "%script_dir%" >nul 2>&1
@@ -64,6 +100,7 @@ echo Selected: %input_pdf%
 :after_pdf_list
 
 :input_section
+echo.
 echo -- Input Parameters --
 echo.
 
@@ -97,6 +134,7 @@ if not exist "%input_pdf%" (
 :output_format
 echo.
 echo Available formats: png, jpg, jpeg, bmp, tiff, gif
+echo.
 set /p output_format="Enter output image format (default: %DEF_OUTPUT_FORMAT%): "
 if "%output_format%"=="" set "output_format=%DEF_OUTPUT_FORMAT%"
 
@@ -261,9 +299,164 @@ echo.
 
 :end
 echo.
+set /p return_menu="Return to main menu? (Y/n): "
+if /i "%return_menu%"=="n" goto final_exit
+if /i "%return_menu%"=="no" goto final_exit
+goto main_menu
+
+:final_exit
+echo.
 echo ==========================================================
-echo Thank you for using PDF to Image Converter!
+echo Thank you for using Image Converter Suite!
 echo ==========================================================
 echo.
-timeout /t 5 >nul
+timeout /t 3 >nul
 exit
+
+:: =========================================================
+:: FEATURE 2: Convert Image Format
+:: =========================================================
+:image_format_converter
+cls
+echo.
+echo =========================================================
+echo *              Convert Image Format                     *
+echo =========================================================
+echo.
+
+:: Check if ImageMagick is available
+where magick >nul 2>nul
+if %errorlevel% neq 0 (
+    echo [ERROR] ImageMagick is not installed or not in PATH!
+    echo Please install ImageMagick from: https://imagemagick.org/script/download.php
+    echo.
+    pause
+    goto main_menu
+)
+
+:: Check for image files in the script directory
+echo.
+echo -- Local Image Detection --
+set "script_dir=%~dp0"
+set "found=0"
+pushd "%script_dir%" >nul 2>&1
+for %%F in (*.jpg *.jpeg *.png *.bmp *.gif *.tiff *.tif *.webp *.avif) do (
+    set /a found+=1
+    set "img!found!=%%F"
+)
+popd >nul 2>&1
+
+if %found% gtr 0 goto show_images
+echo No image files found in script directory.
+echo.
+goto after_image_list
+
+:show_images
+echo Found %found% image(s) in script directory:
+for /l %%i in (1,1,%found%) do echo %%i. !img%%i!
+echo.
+set /p img_sel="Select an image (1-%found%) or press Enter to specify path: "
+if "%img_sel%"=="" goto after_image_list
+echo %img_sel%| findstr /r "^[0-9][0-9]*$" >nul || goto after_image_list
+if %img_sel% lss 1 goto after_image_list
+if %img_sel% gtr %found% goto after_image_list
+call set "file_to_convert=%%img%img_sel%%%"
+set "input_image=%script_dir%!file_to_convert!"
+echo Selected: %input_image%
+
+:after_image_list
+
+:: Get input image filename
+:input_image_convert
+if defined input_image (
+    echo Using selected image: %input_image%
+    goto validate_input_image
+)
+set /p input_image="Enter image filename (with extension): "
+if "%input_image%"=="" (
+    echo [ERROR] Please enter a valid filename!
+    goto input_image_convert
+)
+
+:: Sanitize: remove surrounding quotes
+set "input_image=%input_image:"=%"
+:: Normalize to full path
+for %%I in ("%input_image%") do set "input_image=%%~fI"
+
+:validate_input_image
+if not exist "%input_image%" (
+    echo [ERROR] File '%input_image%' does not exist!
+    echo.
+    set "input_image="
+    goto input_image_convert
+)
+
+:: Get output format
+echo.
+echo Available format options:
+echo   1) jpeg
+echo   2) jpg
+echo   3) custom (avif, webp, tiff, bmp, etc.)
+echo.
+set /p format_choice="Select output format (default: png): "
+if "%format_choice%"=="" set "output_format_conv=png"
+if "%format_choice%"=="1" set "output_format_conv=jpeg"
+if "%format_choice%"=="2" set "output_format_conv=jpg"
+if "%format_choice%"=="3" (
+    set /p custom_format="Enter custom format: "
+    if "!custom_format!"=="" (
+        echo [ERROR] Custom format cannot be empty!
+        goto input_image_convert
+    )
+    set "output_format_conv=!custom_format!"
+)
+if not defined output_format_conv set "output_format_conv=png"
+
+:: Remove dot if present
+if "!output_format_conv:~0,1!"=="." set "output_format_conv=!output_format_conv:~1!"
+
+:: Generate output filename
+for %%I in ("%input_image%") do (
+    set "img_dir=%%~dpI"
+    set "img_base=%%~nI"
+    set "img_ext=%%~xI"
+)
+set "output_image=!img_dir!!img_base!_conv.!output_format_conv!"
+
+:: Display conversion summary
+echo.
+echo ..*..Conversion Summary..*..
+echo.
+echo Input image:    %input_image%
+echo Output format:  !output_format_conv!
+echo Output file:    !output_image!
+echo.
+set /p confirm_conv="Proceed with conversion? (Y/n): "
+if /i "%confirm_conv%"=="n" goto end
+if /i "%confirm_conv%"=="no" goto end
+
+:: Execute conversion
+echo.
+echo ..*..Converting..*..
+echo.
+magick "%input_image%" "!output_image!"
+
+if errorlevel 1 (
+    echo.
+    echo [ERROR] Conversion failed!
+    pause
+    goto end
+)
+
+echo.
+echo [SUCCESS] Image converted successfully!
+echo Output: !output_image!
+
+:: Display file size of converted image
+for %%A in ("!output_image!") do set "converted_size=%%~zA"
+set /a converted_size_kb=!converted_size! / 1024
+set /a converted_size_mb=!converted_size_kb! / 1024
+echo File size: !converted_size! bytes (!converted_size_kb! KB / !converted_size_mb! MB)
+goto end
+
+:: (Compression features removed)
