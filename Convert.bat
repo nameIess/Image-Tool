@@ -13,6 +13,7 @@ set "DEF_DENSITY=180"
 set "DEF_QUALITY=90"
 set "DEF_PREFIX=Page-"
 set "DEF_CONVERT_FORMAT=png"
+set "DEF_COMPRESS_PERCENT=75"
 :: -----------------------------------------------------------------
 
 :main_menu
@@ -27,6 +28,7 @@ echo Select an operation:
 echo.
 echo   1. PDF to Image Converter
 echo   2. Convert Image Format
+echo   3. Compress Image/PDF to Target Size
 echo   0. Exit
 echo.
 set /p menu_choice="Enter your choice (default: 1): "
@@ -35,6 +37,7 @@ if "%menu_choice%"=="" set "menu_choice=1"
 if "%menu_choice%"=="0" goto exit_script
 if "%menu_choice%"=="1" goto pdf_converter
 if "%menu_choice%"=="2" goto image_format_converter
+if "%menu_choice%"=="3" goto compress_image
 
 
 echo [ERROR] Invalid choice!
@@ -111,8 +114,8 @@ if defined input_pdf (
     echo Using selected PDF: %input_pdf%
     goto validate_input_file
 )
-set /p input_pdf="Enter PDF filename (with extension): "
-if "%input_pdf%"=="" (
+set /p input_pdf="Enter PDF filepath (with extension): "
+if "!input_pdf!"=="" (
     echo [ERROR] Please enter a valid filename!
     goto input_pdf
 )
@@ -183,7 +186,7 @@ if "%prefix%"=="" set "prefix=%DEF_PREFIX%"
 
 :: Derive output folder name from input PDF filename (without extension)
 for %%I in ("%input_pdf%") do set "pdf_base=%%~nI"
-set "output_folder=!pdf_base!_image"
+set "output_folder=!pdf_base!_images"
 
 :: Check if output folder exists, create if not
 if not exist "!output_folder!" (
@@ -237,8 +240,12 @@ echo Command:        magick -density %density% "%input_pdf%" -quality %quality% 
 echo.
 
 :: Confirm before proceeding
-set /p confirm="Proceed with conversion? (y/N): "
-if /i not "%confirm%"=="Y" if /i not "%confirm%"=="YES" (
+set /p confirm="Proceed with conversion? (Y/n): "
+if /i "%confirm%"=="n" (
+    echo .......Conversion cancelled.......
+    goto end
+)
+if /i "%confirm%"=="no" (
     echo .......Conversion cancelled.......
     goto end
 )
@@ -372,8 +379,8 @@ if defined input_image (
     echo Using selected image: %input_image%
     goto validate_input_image
 )
-set /p input_image="Enter image filename (with extension): "
-if "%input_image%"=="" (
+set /p input_image="Enter image filepath (with extension): "
+if "!input_image!"=="" (
     echo [ERROR] Please enter a valid filename!
     goto input_image_convert
 )
@@ -459,4 +466,162 @@ set /a converted_size_mb=!converted_size_kb! / 1024
 echo File size: !converted_size! bytes (!converted_size_kb! KB / !converted_size_mb! MB)
 goto end
 
-:: (Compression features removed)
+:: =========================================================
+:: FEATURE 3: Compress Image/PDF to Target Size
+:: =========================================================
+:compress_image
+cls
+echo.
+echo =========================================================
+echo *          Compress Image/PDF to Target Size            *
+echo =========================================================
+echo.
+
+:: Check if ImageMagick is available
+where magick >nul 2>nul
+if %errorlevel% neq 0 (
+    echo [ERROR] ImageMagick is not installed or not in PATH!
+    echo Please install ImageMagick from: https://imagemagick.org/script/download.php
+    echo.
+    pause
+    goto main_menu
+)
+
+:: Check for files in the script directory
+echo.
+echo -- Local File Detection --
+set "script_dir=%~dp0"
+set "found=0"
+pushd "%script_dir%" >nul 2>&1
+for %%F in (*.jpg *.jpeg *.png *.bmp *.gif *.tiff *.tif *.webp *.avif *.pdf) do (
+    set /a found+=1
+    set "file!found!=%%F"
+)
+popd >nul 2>&1
+
+if %found% gtr 0 goto show_files_compress
+echo No supported files found in script directory.
+echo.
+goto after_file_list_compress
+
+:show_files_compress
+echo Found %found% file(s) in script directory:
+for /l %%i in (1,1,%found%) do echo %%i. !file%%i!
+echo.
+set /p file_sel="Select a file (1-%found%) or press Enter to specify path: "
+if "%file_sel%"=="" goto after_file_list_compress
+echo %file_sel%| findstr /r "^[0-9][0-9]*$" >nul || goto after_file_list_compress
+if %file_sel% lss 1 goto after_file_list_compress
+if %file_sel% gtr %found% goto after_file_list_compress
+call set "file_to_compress=%%file%file_sel%%%"
+set "input_file=%script_dir%!file_to_compress!"
+echo Selected: %input_file%
+
+:after_file_list_compress
+
+:: Get input filename
+:input_file_compress
+if defined input_file (
+    echo Using selected file: %input_file%
+    goto validate_input_compress
+)
+set /p input_file="Enter filepath (with extension): "
+if "!input_file!"=="" (
+    echo [ERROR] Please enter a valid filename!
+    goto input_file_compress
+)
+
+:: Sanitize
+set "input_file=%input_file:"=%"
+for %%I in ("%input_file%") do set "input_file=%%~fI"
+
+:validate_input_compress
+if not exist "%input_file%" (
+    echo [ERROR] File '%input_file%' does not exist!
+    echo.
+    set "input_file="
+    goto input_file_compress
+)
+
+:: Get original file size
+for %%A in ("%input_file%") do set "orig_size=%%~zA"
+set /a orig_size_kb=!orig_size! / 1024
+if !orig_size_kb! lss 1 set orig_size_kb=1
+echo Original size: !orig_size! bytes (~!orig_size_kb! KB)
+
+:: Get target percentage
+echo.
+echo Enter target file size percentage (1-100).
+echo Example: 50 means the output file will be 50%% of the original size.
+set /p target_percent="Target Percentage (default: %DEF_COMPRESS_PERCENT%): "
+if "!target_percent!"=="" set "target_percent=%DEF_COMPRESS_PERCENT%"
+
+:: Validate numeric
+echo !target_percent!| findstr /r "^[0-9][0-9]*$" >nul
+if %errorlevel% neq 0 (
+    echo [ERROR] Please enter a valid number!
+    goto validate_input_compress
+)
+
+:: Calculate target size in KB
+set /a target_size_kb = orig_size_kb * target_percent / 100
+if !target_size_kb! lss 1 set target_size_kb=1
+set "target_size=!target_size_kb!KB"
+set /a target_size_mb = target_size_kb / 1024
+set "target_size_display=!target_size_kb!KB (~!target_size_mb! MB)"
+echo Target size calculated: !target_size_display!
+
+:: Get output filename
+for %%I in ("%input_file%") do (
+    set "file_dir=%%~dpI"
+    set "file_base=%%~nI"
+    set "file_ext=%%~xI"
+)
+
+:: Default output format to jpg for best compression results with 'extent'
+set "output_ext=.jpg"
+if /i "%file_ext%"==".pdf" set "output_ext=.pdf"
+
+set "output_file=!file_dir!!file_base!_comp!output_ext!"
+
+:: Display summary
+echo.
+echo ..*..Compression Summary..*..
+echo.
+echo Input file:     %input_file%
+echo Target Size:    !target_size_display!
+echo Output file:    !output_file!
+echo.
+set /p confirm_comp="Proceed with compression? (Y/n): "
+if /i "%confirm_comp%"=="n" goto end
+if /i "%confirm_comp%"=="no" goto end
+
+:: Execute conversion
+echo.
+echo ..*..Compressing..*..
+echo.
+
+if /i "%file_ext%"==".pdf" (
+    echo [INFO] Processing PDF. This may rasterize the content to achieve the target size.
+)
+
+magick "%input_file%" -define jpeg:extent=%target_size% "!output_file!"
+
+if errorlevel 1 (
+    echo.
+    echo [ERROR] Compression failed!
+    pause
+    goto end
+)
+
+echo.
+echo [SUCCESS] File compressed successfully!
+echo Output: !output_file!
+
+:: Display file size
+for %%A in ("!output_file!") do set "new_size=%%~zA"
+set /a new_size_kb=!new_size! / 1024
+set /a new_size_mb=!new_size_kb! / 1024
+echo New File size: !new_size! bytes (!new_size_kb! KB / !new_size_mb! MB)
+
+goto end
