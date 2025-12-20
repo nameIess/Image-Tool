@@ -1,6 +1,6 @@
 # This file defines GitHub Issue Forms for Bug Report, Feature Request, and User Support
 # Place this file at .github/ISSUE_TEMPLATE/issue-forms.yml
-
+blank_issues_enabled: false
 ---
 name: "Bug report 🐛"
 description: "Create a report to help us improve"
@@ -112,52 +112,3 @@ name: "User Support 🆘"
 description: "Request help or ask a question."
 labels: [help wanted, question]
 assignees: [nameIess]
-body:
-  - type: textarea
-    id: support-title
-    attributes:
-      label: "Support Request Title"
-      description: "A short, clear summary of your question or issue."
-    validations:
-      required: true
-  - type: checkboxes
-    id: docs-checked
-    attributes:
-      label: "Documentation Checked"
-      options:
-        - label: "README"
-        - label: "Help / CLI --help"
-        - label: "Existing issues"
-  - type: textarea
-    id: need-help-with
-    attributes:
-      label: "What do you need help with?"
-      description: "Clearly describe what you are trying to do."
-    validations:
-      required: true
-  - type: textarea
-    id: what-tried
-    attributes:
-      label: "What have you tried?"
-      description: "List the steps, commands, or configurations you have already attempted."
-  - type: textarea
-    id: expected-outcome
-    attributes:
-      label: "Expected Outcome"
-      description: "What result are you hoping to achieve?"
-  - type: textarea
-    id: environment
-    attributes:
-      label: "Environment Details"
-      description: "OS, Python version, project version/commit, Mode (CLI/UI/Headless)"
-  - type: textarea
-    id: logs
-    attributes:
-      label: "Logs / Output (if applicable)"
-      description: "Paste any relevant output, logs, or error messages."
-      render: shell
-  - type: textarea
-    id: additional-context
-    attributes:
-      label: "Additional Context"
-      description: "Any other details that might help answer your question."
