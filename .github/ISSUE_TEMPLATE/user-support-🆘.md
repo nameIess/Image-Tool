@@ -1,5 +1,5 @@
 ---
-name: User Support
+name: "User Support \U0001F198"
 about: Describe this issue template's purpose here.
 title: ''
 labels: help wanted, question
