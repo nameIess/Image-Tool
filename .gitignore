@@ -1,0 +1,77 @@
+# ================================
+# Python
+# ================================
+__pycache__/
+*.py[cod]
+*.pyo
+*.pyd
+.Python
+*.egg-info/
+*.egg
+dist/
+build/
+eggs/
+*.manifest
+*.spec
+
+# Virtual environments
+.venv/
+venv/
+ENV/
+env/
+.env
+
+# ================================
+# User Data & Sessions (IMPORTANT)
+# ================================
+# Browser session data - contains login cookies
+.browser_data/
+
+# Downloaded icons
+/data/
+*.png
+*.ico
+
+# ================================
+# IDE & Editor
+# ================================
+.vscode/
+.idea/
+*.swp
+*.swo
+*~
+
+# ================================
+# OS Files
+# ================================
+.DS_Store
+.DS_Store?
+Thumbs.db
+ehthumbs.db
+Desktop.ini
+
+# ================================
+# Debug & Logs
+# ================================
+*.log
+debug_page.html
+debug_*.html
+
+# ================================
+# Playwright
+# ================================
+playwright-report/
+test-results/
+
+# ================================
+# Jupyter Notebooks
+# ================================
+.ipynb_checkpoints/
+
+# ================================
+# Misc
+# ================================
+*.bak
+*.tmp
+*.temp
+todo.md

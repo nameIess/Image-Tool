@@ -1,143 +1,194 @@
-# 📝 To-Do List Application
+# 🎨 Icons8 Collector
 
-A simple, responsive, and user-friendly To-Do List web application built with **HTML**, **CSS**, and **JavaScript**. Users can add, complete, and delete tasks — with all tasks saved in the browser via **localStorage** for persistence across sessions.
+Download icons from your Icons8 collections with ease. Supports PNG and ICO formats with automatic conversion.
 
----
+## 📥 Set-Up
+
+**[⬇️ Download ](https://github.com/nameIess/Icons8-Collector/archive/refs/heads/master.zip)**
+
+Or clone the repository:
+
+```bash
+git clone https://github.com/nameIess/Icons8-Collector.git
+cd Icons8-Collector
+```
 
 ## ✨ Features
 
-- **Add Tasks:** Quickly add tasks via the input field using the **+Task** button or **Enter** key.
-- **Complete Tasks:** Click a task to toggle it as completed with a checkmark and strikethrough.
-- **Delete Tasks:** Remove tasks with a single click on the `×` icon.
-- **Persistent Storage:** Automatically saves tasks to `localStorage`.
-- **Input Validation:** Prevents adding empty tasks using a stylish pop-up.
-- **Responsive Design:** Optimized layout for both mobile and desktop (max width: 540px).
-- **Interactive UI:** Smooth animations, hover effects, and modern gradients.
-- **Keyboard Support:** Press **Enter** to add tasks and navigate the interface with ease.
+- 🔐 **Automatic login** - Logs into your Icons8 account automatically
+- 💾 **Session caching** - Remembers your login (no need to login every time)
+- 🖼️ **Multiple formats** - Download as PNG, ICO, or both
+- 📐 **Custom sizes** - Choose from 64px to 512px (or custom)
+- 🤖 **Headless mode** - Runs invisibly in the background
+- 🎛️ **Interactive UI** - Beautiful terminal interface
 
----
+## 🚀 Quick Start
 
-## 📁 File Structure
+### Installation
 
-```
-/project-root
-├── index.html           # Main HTML file with UI and pop-up layout
-├── readme.md            # This README file
-└── /resource
-    ├── script.js        # JavaScript logic for task handling and storage
-    └── style.css        # CSS for layout, styling, and animations
+```bash
+# Install dependencies
+pip install -r requirements.txt
+
+# Install Playwright browser
+python -m playwright install chromium
 ```
 
----
+### Usage
 
-## 🚀 Getting Started
+#### One-liner (recommended for scripts):
 
-### ✅ Prerequisites
+```bash
+python Icons8-Collector.py --url "https://icons8.com/icons/collections/YOUR_COLLECTION_ID" --email "your@email.com" --password "yourpassword"
+```
 
-- A modern web browser (e.g., Chrome, Firefox, Edge).
-- Optional: Internet connection (for external icon URLs, or host them locally).
+#### Interactive mode (just run without arguments):
 
-### 🔧 Installation
+```bash
+python Icons8-Collector.py
+```
 
-1. **Clone or Download:**
-   - Clone the repo or download and extract the ZIP file.
-   - Ensure the file structure matches the one shown above.
+This opens a nice terminal UI where you can enter all options step by step.
 
-2. **Run Locally:**
-   - Open `index.html` directly in your browser.
-   - (Optional) Use a local development server like `live-server` for a better dev experience.
+## 📋 Command Line Options
 
-3. **Optional Configuration:**
-   - **Fix Broken Image:** Replace or remove the `<img>` in `index.html` (line 10).
-   - **Offline Icons:** Host checkbox icons locally and update their URLs in `style.css`.
+| Option          | Alias | Default | Description                             |
+| --------------- | ----- | ------- | --------------------------------------- |
+| `--url`         | `-u`  | -       | Collection URL (required)               |
+| `--email`       | `-e`  | -       | Icons8 account email                    |
+| `--password`    | `-P`  | -       | Icons8 account password                 |
+| `--format`      | `-f`  | `ico`   | Output format: `png`, `ico`, or `both`  |
+| `--size`        | `-z`  | `256`   | Icon size in pixels (64, 128, 256, 512) |
+| `--output`      | `-o`  | `data`  | Output directory path                   |
+| `--visible`     | `-v`  | `false` | Show browser window (for debugging)     |
+| `--interactive` | `-i`  | `false` | Force interactive mode with terminal UI |
+| `--help`        | `-h`  | -       | Show help message and exit              |
 
----
+### Option Details
 
-## 🛠 Usage
+```
+--url, -u           Required. The Icons8 collection URL
+                    Example: https://icons8.com/icons/collections/abc123
 
-### ➕ Add Tasks
-- Type your task in the "Add your Task" field.
-- Click the **+Task** button or press **Enter**.
+--email, -e         Your Icons8 account email address
+                    Leave empty to use cached login session
 
-### ✅ Complete / ❌ Delete Tasks
-- **Toggle Complete:** Click on a task to mark/unmark it as completed.
-- **Delete:** Click the `×` icon to remove a task.
+--password, -P      Your Icons8 account password (capital P)
+                    Only needed if not already logged in
 
-### ⚠ Input Validation
-- If the input is empty, a pop-up appears:
-  > _"Task can't be empty. Please enter task before Adding Task."_
+--format, -f        Choose output format:
+                    • png  - PNG files only
+                    • ico  - ICO files only (default, deletes PNG after conversion)
+                    • both - Keep both PNG and ICO files
 
-- Click **Okay** to close the pop-up and return to the input.
+--size, -z          Icon size in pixels. Common values:
+                    • 64   - Small
+                    • 128  - Medium
+                    • 256  - Large (default, best quality)
+                    • 512  - Extra large
 
-### 💾 Data Persistence
-- All tasks are stored using `localStorage`.
-- Your list is preserved even after reloading or closing the browser.
+--output, -o        Directory where icons will be saved
+                    Default: ./data/
 
----
+--visible, -v       Show the browser window during scraping
+                    Useful for debugging login issues
 
-## 🔍 Development Notes
+--interactive, -i   Launch interactive terminal UI
+                    Prompts for all options step by step
+```
 
-### 🧱 HTML (`index.html`)
-- Contains main UI elements, task list, and validation pop-up.
+## 📝 Examples
 
-### 🎨 CSS (`style.css`)
-- Uses a gradient background: `linear-gradient(135deg, #153677, #d74072)`.
-- Responsive design with animations and hover effects.
-- External icons for task state (can be replaced for offline use).
+### Download collection as ICO files (default):
 
-### ⚙ JavaScript (`script.js`)
-- Manages tasks: add, complete, delete.
-- Stores task list HTML in `localStorage`.
-- Handles pop-up display and keyboard events.
+```bash
+python Icons8-Collector.py --url "https://icons8.com/icons/collections/abc123" --email "me@email.com" --password "mypass"
+```
 
----
+### Download as PNG with custom size:
 
-## 📈 Potential Improvements
+```bash
+python Icons8-Collector.py --url "https://icons8.com/icons/collections/abc123" --email "me@email.com" --password "mypass" --format png --size 512
+```
 
-### ♿ Accessibility
-- Add `aria-label`s and `role="alert"` for better screen reader support.
-- Improve keyboard navigation (e.g., `Esc` to close pop-up, `Tab` to access buttons).
+### Download both PNG and ICO:
 
-### ✏️ UX Features
-- Edit tasks by clicking the text.
-- Add categories, priority levels, or color tags.
-- Include a "Clear All" button.
+```bash
+python Icons8-Collector.py --url "https://icons8.com/icons/collections/abc123" --email "me@email.com" --password "mypass" --format both
+```
 
-### 🧹 Pop-Up Enhancements
-- Auto-close the pop-up after a delay (`setTimeout`).
-- Allow closing pop-up with `Esc`.
+### Run with visible browser (for debugging):
 
-### 🛡 Error Handling
-- Sanitize localStorage data to avoid rendering malformed HTML.
-- Handle long or special character inputs.
+```bash
+python Icons8-Collector.py --url "https://icons8.com/icons/collections/abc123" --email "me@email.com" --password "mypass" --visible
+```
 
-### 📱 Mobile Optimization
-- Adjust padding, font sizes, and button sizes for touch-friendly interaction.
+## 📁 Output Structure
 
----
+```
+data/
+├── Collection_PNG/     # PNG files (if format is png or both)
+│   ├── icon_name_1.png
+│   └── icon_name_2.png
+└── Collection_ICO/     # ICO files (if format is ico or both)
+    ├── icon_name_1.ico
+    └── icon_name_2.ico
+```
 
-## 🐞 Known Issues
+## 🔒 Privacy & Security
 
-- **Broken Image:** Missing `src` in `<img>` (line 10, `index.html`). Replace or remove.
-- **External Icons:** Icons in `style.css` rely on CDN; may not load offline.
-- **Manual Pop-Up Closure:** Currently requires clicking **Okay**, which may interrupt user flow.
+- Your login session is stored locally in `.browser_data/` folder
+- Credentials are never saved to disk
+- The `.browser_data/` folder is gitignored
+- Run with `--visible` to see exactly what the script is doing `Headless Recommended`
 
----
+## 🛠️ Requirements
 
-## 🤝 Contributing
+- Python 3.8+
+- Icons8 account (free or paid)
+- Chrome browser (optional, falls back to Chromium)
 
-Feel free to fork the repo, make changes, and submit pull requests!  
-Bug reports and feature suggestions are also welcome.
+## 📜 License
 
----
+MIT License - See [LICENSE](License) file for details.
 
-## 📄 License
+### Examples
 
-This project is **unlicensed** and free to use, modify, or distribute for any purpose.
+```bash
+# Download 20 folder icons in fluent style
+python Icons8-Collector.py --search "folder" --style fluent --amount 20
 
----
+# Download 100 home icons in color style, size 256px
+python Icons8-Collector.py --search "home" --style color --amount 100 --size 256
 
-## 🙏 Acknowledgments
+# Download icons without ICO conversion
+python Icons8-Collector.py --search "arrow" --style material --no-ico
 
-- Built using vanilla **HTML**, **CSS**, and **JavaScript** for simplicity and educational value.
-- Gradient UI inspired by modern minimalistic design trends.
+# Download icons from a collection (login required)
+python Icons8-Collector.py --url "https://icons8.com/icons/collections/xxx" --email "your@email.com" --password "yourpassword"
+```
+
+## Output
+
+Icons are saved to the output directory (default: `data`):
+
+- `data/{Style}_PNG/` - PNG format icons
+- `data/{Style}_ICO/` - ICO format icons (unless `--no-ico` is used)
+- For collections, output folders are named `Collection_PNG` and `Collection_ICO`
+
+## Notes
+
+- Collection URLs require user authentication and browser automation. You may need to log in manually if credentials are not provided.
+- The script only downloads preview images (max resolution 550px) available on Icons8.
+- If you only want PNG files, use the `--no-ico` option.
+- The script uses Playwright for scraping collections. Make sure Chromium is installed (`python -m playwright install chromium`).
+
+## Troubleshooting
+
+- If Playwright is not installed, the script will attempt to install it automatically.
+- For collection downloads, if auto-login fails, log in manually in the browser window and press ENTER in the terminal to continue.
+- If you encounter issues, check the output and debug logs for details.
+
+## License
+
+MIT License. See License file for details.
