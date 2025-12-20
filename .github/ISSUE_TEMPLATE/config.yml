@@ -1,1 +1,8 @@
 blank_issues_enabled: false
+contact_links:
+  - name: Community Support
+    url: https://discord.gg/example
+    about: Please ask questions and get help from the community here.
+  - name: Documentation
+    url: https://docs.example.com
+    about: Read our documentation to find answers to common questions.

@@ -1,62 +1,76 @@
-name: Bug Report
-description: "Report a bug or issue with Icons8-Collector."
+name: Bug Report 🐛
+description: Report bugs and issues for {{ .ProjectName }} – Help us improve by sharing detailed problem reports.
+assignees: [username]
 labels: ["bug"]
 body:
   - type: markdown
     attributes:
       value: |
-        Please fill out the following to help us resolve your issue faster.
-  - type: textarea
+        ### Thank you for reporting a bug! 
+        Please provide as much detail as possible so we can resolve the issue in {{ .ProjectName }} quickly.
+
+  - type: dropdown
+    id: severity
     attributes:
-      label: Bug Title
-      description: "A short, clear summary of the bug."
+      label: 🎯 Impact & Severity
+      description: "How significantly does this bug affect your use of the project?"
+      options:
+        - "Blocks usage completely ❌"
+        - "Partial functionality affected ⚠️"
+        - "Minor UI/UX issue or typo 🟡"
     validations:
       required: true
+
   - type: textarea
+    id: problem
     attributes:
-      label: Problem Description
-      description: "Describe the bug clearly. What did you expect to happen? What actually happened? When does it occur? (always / sometimes / specific case)"
+      label: 🧩 Problem Description
+      description: "Clearly describe the bug. What were you doing when it occurred?"
+      placeholder: "e.g., The application crashes when I try to save a file with special characters in the name."
     validations:
       required: true
+
   - type: textarea
+    id: steps
     attributes:
-      label: Steps to Reproduce
-      description: "Provide exact steps so the bug can be reproduced."
+      label: 🔁 Steps to Reproduce
+      description: "List the exact steps needed to reproduce the error."
+      placeholder: |
+        1. Open {{ .ProjectName }}
+        2. Navigate to 'Settings'
+        3. Change 'Theme' to 'Dark'
+        4. Observe the crash
     validations:
       required: true
+
   - type: textarea
+    id: behavior
     attributes:
-      label: Actual vs Expected Behavior
-      description: "Explain the difference between expected and actual results."
-    validations:
-      required: true
-  - type: textarea
-    attributes:
-      label: Environment Details
-      description: "OS, Python version, Icons8-Collector version, Mode (CLI/UI/Headless)"
-    validations:
-      required: true
-  - type: textarea
-    attributes:
-      label: Logs / Error Output
-      description: "Paste any relevant logs or error messages."
+      label: 📤 Actual vs Expected Behavior
+      description: "Contrast the result you wanted with the result you actually received."
+      placeholder: |
+        Expected: The theme changes to dark mode without issue.
+        Actual: The application window closes immediately.
     validations:
       required: false
+
   - type: textarea
+    id: logs
     attributes:
-      label: Workarounds Tried
-      description: "Have you tried anything to fix or bypass the issue?"
+      label: 🧪 Logs / Error Output
+      description: "Paste terminal output, stack traces, or error logs here."
+      render: shell
     validations:
       required: false
+
   - type: textarea
+    id: environment
     attributes:
-      label: Impact & Severity
-      description: "How serious is this bug? (Blocks usage/Partial/Minor)"
+      label: 💻 Environment Details
+      description: "Specify your setup to help us debug."
+      placeholder: |
+        - OS: [e.g. Ubuntu 22.04, Windows 11]
+        - Project Version: [e.g. v1.2.0]
+        - Relevant Dependencies: [e.g. Docker v24.0, Node v20]
     validations:
       required: true
-  - type: textarea
-    attributes:
-      label: Additional Context
-      description: "Add any extra information that may help diagnose the issue."
-    validations:
-      required: false
