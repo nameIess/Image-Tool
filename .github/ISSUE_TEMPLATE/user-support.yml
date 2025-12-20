@@ -1,6 +1,6 @@
 name: User Support 🆘
 description: Get help and troubleshooting for {{ .ProjectName }} – Fast, friendly support for your questions and issues.
-assignees: [username]
+assignees: [nameIess]
 labels: ["help wanted", "question", "community"]
 body:
   - type: markdown

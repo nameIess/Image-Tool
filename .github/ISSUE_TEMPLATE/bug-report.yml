@@ -1,6 +1,6 @@
 name: Bug Report 🐛
 description: Report bugs and issues for {{ .ProjectName }} – Help us improve by sharing detailed problem reports.
-assignees: [username]
+assignees: [nameIess]
 labels: ["bug"]
 body:
   - type: markdown

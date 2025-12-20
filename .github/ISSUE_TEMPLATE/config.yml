@@ -1,8 +1,8 @@
 blank_issues_enabled: false
 contact_links:
   - name: Community Support
-    url: https://discord.gg/example
+    url: https://discord.gg/cXwcpwtxkS
     about: Please ask questions and get help from the community here.
   - name: Documentation
-    url: https://docs.example.com
+    url: https://github.com/nameIess/testing-features-on-git/blob/master/README.md
     about: Read our documentation to find answers to common questions.

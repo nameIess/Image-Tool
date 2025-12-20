@@ -1,6 +1,6 @@
 name: Feature Request 🫂
 description: Suggest new features or improvements for {{ .ProjectName }}
-assignees: [username]
+assignees: [nameIess]
 labels: ["enhancement", "feature"]
 body:
   - type: markdown
