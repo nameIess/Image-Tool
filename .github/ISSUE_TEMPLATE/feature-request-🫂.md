@@ -1,5 +1,5 @@
 ---
-name: Feature request
+name: "Feature request \U0001FAC2"
 about: Suggest an idea for this project
 title: Feature Request..❕
 labels: bug, Feature Request, invalid
