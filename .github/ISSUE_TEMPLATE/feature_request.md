@@ -2,7 +2,7 @@
 name: Feature request
 about: Suggest an idea for this project
 title: Feature Request..❕
-labels: Feature Request
+labels: bug, Feature Request, invalid
 assignees: nameIess
 
 ---
