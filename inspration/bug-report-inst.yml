@@ -1,32 +1,87 @@
-name: Feature Request
-description: "You have an idea for something new you would like to see added to ComfyUI's core."
-labels: [ "Feature" ]
+name: Bug Report 🐛
+description: Report an issue to help us improve Icons8-Collector.
+labels: ["bug"]
 body:
-    - type: markdown
-      attributes:
-        value: |
-                Before submitting a **Feature Request**, please ensure the following:
-
-                **1:** You are running the latest version of ComfyUI.
-                **2:** You have looked to make sure there is not already a feature that does what you need, and there is not already a Feature Request listed for the same idea.
-                **3:** This is something that makes sense to add to ComfyUI Core, and wouldn't make more sense as a custom node.
-
-                If unsure, ask on the [ComfyUI Matrix Space](https://app.element.io/#/room/%23comfyui_space%3Amatrix.org) or the [Comfy Org Discord](https://discord.gg/comfyorg) first.
-    - type: textarea
-      attributes:
-            label: Feature Idea
-            description: "Describe the feature you want to see."
-      validations:
-            required: true
-    - type: textarea
-      attributes:
-                label: Existing Solutions
-                description: "Please search through available custom nodes / extensions to see if there are existing custom solutions for this. If so, please link the options you found here as a reference."
-      validations:
-                required: false
-    - type: textarea
-      attributes:
-                label: Other
-                description: "Any other additional information you think might be helpful."
-      validations:
-                required: false
+  - type: markdown
+    attributes:
+      value: |
+        ### Thank you for reporting a bug! 
+        Please provide as much detail as possible so we can resolve the issue quickly.
+  - type: input
+    id: title
+    attributes:
+      label: Bug Title
+      placeholder: "e.g., Script crashes after successful login"
+    validations:
+      required: true
+  - type: textarea
+    id: problem
+    attributes:
+      label: 🧩 Problem Description
+      description: "Clearly describe the bug. What were you doing when it occurred?"
+      placeholder: |
+        - What did you expect to happen?
+        - What actually happened?
+        - When does it occur? (always / sometimes / specific case)
+    validations:
+      required: true
+  - type: textarea
+    id: steps
+    attributes:
+      label: 🔁 Steps to Reproduce
+      description: "List the exact steps to reproduce the error."
+      placeholder: |
+        1. Run command 'python main.py'
+        2. Enter credentials...
+        3. Click on 'Download'
+        4. See error...
+    validations:
+      required: true
+  - type: textarea
+    id: behavior
+    attributes:
+      label: 📤 Actual vs Expected Behavior
+      description: "Contrast the result you wanted with the result you got."
+      placeholder: |
+        Expected: Icons downloaded in PNG and ICO format.
+        Actual: Script exits with an error after login.
+    validations:
+      required: true
+  - type: textarea
+    id: environment
+    attributes:
+      label: 💻 Environment Details
+      description: "Please specify your setup."
+      value: |
+        - OS: [e.g. Windows 11, Ubuntu 22.04, macOS]
+        - Python version: 
+        - Icons8-Collector version: 
+        - Mode: [CLI / UI / Headless]
+    validations:
+      required: true
+  - type: textarea
+    id: logs
+    attributes:
+      label: 🧪 Logs / Error Output
+      description: "Paste terminal output or Tracebacks here."
+      render: shell
+    validations:
+      required: false
+  - type: dropdown
+    id: severity
+    attributes:
+      label: 🎯 Impact & Severity
+      description: "How serious is this bug?"
+      options:
+        - "Blocks usage completely ❌"
+        - "Partial functionality ⚠️"
+        - "Minor issue 🟡"
+    validations:
+      required: true
+  - type: textarea
+    id: context
+    attributes:
+      label: 🧾 Additional Context
+      description: "Add screenshots, links to related issues, or any other info."
+    validations:
+      required: false
