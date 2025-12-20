@@ -1,0 +1,56 @@
+name: User Support
+description: "Request help or support for using Icons8-Collector."
+labels: ["help wanted", "question"]
+body:
+  - type: markdown
+    attributes:
+      value: |
+        Please provide as much detail as possible to help us assist you.
+  - type: textarea
+    attributes:
+      label: Support Request Title
+      description: "A short, clear summary of your question or issue."
+    validations:
+      required: true
+  - type: textarea
+    attributes:
+      label: Documentation Checked
+      description: "Have you reviewed the documentation, README, CLI help, and existing issues?"
+    validations:
+      required: true
+  - type: textarea
+    attributes:
+      label: What do you need help with?
+      description: "Clearly describe what you are trying to do with Icons8-Collector."
+    validations:
+      required: true
+  - type: textarea
+    attributes:
+      label: What have you tried?
+      description: "List the steps, commands, or configurations you have already attempted."
+    validations:
+      required: true
+  - type: textarea
+    attributes:
+      label: Expected Outcome
+      description: "What result are you hoping to achieve?"
+    validations:
+      required: true
+  - type: textarea
+    attributes:
+      label: Environment Details
+      description: "OS, Python version, Icons8-Collector version, Mode (CLI/UI/Headless)"
+    validations:
+      required: true
+  - type: textarea
+    attributes:
+      label: Logs / Output (if applicable)
+      description: "Paste any relevant output, logs, or error messages."
+    validations:
+      required: false
+  - type: textarea
+    attributes:
+      label: Additional Context
+      description: "Any other details that might help answer your question."
+    validations:
+      required: false

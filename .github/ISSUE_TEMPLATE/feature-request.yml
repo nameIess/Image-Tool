@@ -1,0 +1,50 @@
+name: Feature Request
+description: "Suggest a new feature or improvement for Icons8-Collector."
+labels: ["Feature Request"]
+body:
+  - type: markdown
+    attributes:
+      value: |
+        Please fill out the following to help us understand your feature request.
+  - type: textarea
+    attributes:
+      label: Feature Title
+      description: "A short, clear name for the feature."
+    validations:
+      required: true
+  - type: textarea
+    attributes:
+      label: Problem / Use Case
+      description: "What problem are you facing while using Icons8-Collector?"
+    validations:
+      required: true
+  - type: textarea
+    attributes:
+      label: Proposed Feature
+      description: "Describe what you want to be added or improved."
+    validations:
+      required: true
+  - type: textarea
+    attributes:
+      label: Expected Output / Behavior
+      description: "What should happen once this feature is implemented?"
+    validations:
+      required: true
+  - type: textarea
+    attributes:
+      label: Alternatives / Workarounds
+      description: "Have you tried another way to achieve this? Why isn’t it good enough?"
+    validations:
+      required: false
+  - type: textarea
+    attributes:
+      label: Impact & Value
+      description: "Why is this feature useful?"
+    validations:
+      required: true
+  - type: textarea
+    attributes:
+      label: Additional Context
+      description: "Add any supporting information that helps explain the request."
+    validations:
+      required: false
