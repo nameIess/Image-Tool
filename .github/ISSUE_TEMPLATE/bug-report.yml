@@ -1,5 +1,5 @@
 name: Bug Report 🐛
-description: Report bugs and issues for {{ .ProjectName }} – Help us improve by sharing detailed problem reports.
+description: Report bugs and issues for testing-features-on-git – Help us improve by sharing detailed problem reports.
 assignees: [nameIess]
 labels: ["bug"]
 body:
@@ -7,7 +7,7 @@ body:
     attributes:
       value: |
         ### Thank you for reporting a bug! 
-        Please provide as much detail as possible so we can resolve the issue in {{ .ProjectName }} quickly.
+        Please provide as much detail as possible so we can resolve the issue in testing-features-on-git quickly.
 
   - type: dropdown
     id: severity
@@ -36,7 +36,7 @@ body:
       label: 🔁 Steps to Reproduce
       description: "List the exact steps needed to reproduce the error."
       placeholder: |
-        1. Open {{ .ProjectName }}
+        1. Open testing-features-on-git
         2. Navigate to 'Settings'
         3. Change 'Theme' to 'Dark'
         4. Observe the crash

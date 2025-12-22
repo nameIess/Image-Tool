@@ -1,12 +1,12 @@
 name: User Support 🆘
-description: Get help and troubleshooting for {{ .ProjectName }} – Fast, friendly support for your questions and issues.
+description: Get help and troubleshooting for testing-features-on-git – Fast, friendly support for your questions and issues.
 assignees: [nameIess]
 labels: ["help wanted", "question", "community"]
 body:
   - type: markdown
     attributes:
       value: |
-        ### Need some help with {{ .ProjectName }}? ❓
+        ### Need some help with testing-features-on-git? ❓
         Before opening a support request, please ensure you have checked the available documentation and existing discussions.
 
   - type: checkboxes

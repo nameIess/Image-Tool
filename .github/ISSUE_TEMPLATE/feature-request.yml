@@ -1,5 +1,5 @@
 name: Feature Request 🫂
-description: Suggest new features or improvements for {{ .ProjectName }}
+description: Suggest new features or improvements for testing-features-on-git
 assignees: [nameIess]
 labels: ["enhancement", "feature"]
 body:
@@ -7,7 +7,7 @@ body:
     attributes:
       value: |
         ### Share your idea! 💡
-        Help us understand how to make {{ .ProjectName }} better for everyone by suggesting new ideas or improvements.
+        Help us understand how to make testing-features-on-git better for everyone by suggesting new ideas or improvements.
 
   - type: textarea
     id: problem_use_case
@@ -24,7 +24,7 @@ body:
       label: 📤 Proposed Feature / Behavior
       description: "Describe the solution you'd like to see. What should happen once this is implemented?"
       placeholder: |
-        - New command: `{{ .ProjectName }} export --json`
+        - New command: `testing-features-on-git export --json`
         - Expected output: A file containing the structured data
         - Configuration options: Ability to specify the output path
     validations:
@@ -37,7 +37,7 @@ body:
       description: "Have you tried another way to achieve this? Why wasn’t it sufficient?"
       placeholder: |
         - Used a manual conversion script, but it is error-prone
-        - Tried a third-party tool, but it doesn't integrate with the {{ .ProjectName }} ecosystem
+        - Tried a third-party tool, but it doesn't integrate with the testing-features-on-git ecosystem
     validations:
       required: false
 
