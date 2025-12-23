@@ -1,10 +1,4 @@
----
-name: "Pull Request 📝"
-about: Submit changes to the project
-title: "[PR]"
-labels: enhancement
-assignees: nameIess
----
+> ❗ Remove or leave this section empty if you have no additional context to add.
 
 ## 📝 Pull Request Title
 
@@ -65,5 +59,3 @@ Any other information that might be helpful for reviewers:
 - Security considerations
 - Future improvements
 - Links to related discussions
-
-> ❗ Remove or leave this section empty if you have no additional context to add.
