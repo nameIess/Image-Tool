@@ -270,6 +270,18 @@ set /a orig_size_kb=orig_size/1024
 if %orig_size_kb% lss 1 set orig_size_kb=1
 echo Original size: %orig_size% bytes (~%orig_size_kb% KB)
 
+:: Ask user for compression mode
+echo.
+echo Select compression mode:
+echo   1. By percentage (default)
+echo   2. To fixed file size
+set "compress_mode="
+set /p compress_mode="Enter choice (1 or 2, default: 1): "
+if "%compress_mode%"=="" set "compress_mode=1"
+
+if "%compress_mode%"=="2" goto compress_fixed_size
+
+:: --- Existing percentage-based compression ---
 echo.
 echo Enter target file size percentage (1-100).
 echo Example: 50 means the output file will be 50%% of the original size.
@@ -319,6 +331,113 @@ echo.
 echo [SUCCESS] File compressed successfully!
 echo Output: !output_file!
 call :display_size "!output_file!" "New file size"
+
+echo.
+call :prompt_yes_no "Return to main menu? (Y/n): " "Y" return_menu_comp
+if /i "%return_menu_comp%"=="Y" exit /b 0
+goto final_exit
+
+:compress_fixed_size
+:: --- New fixed size compression ---
+for %%I in ("%input_file%") do (
+    set "file_dir=%%~dpI"
+    set "file_base=%%~nI"
+    set "file_ext=%%~xI"
+)
+set "output_ext=.jpg"
+if /i "%file_ext%"==".pdf" (
+    echo [ERROR] Fixed size compression for PDF is not supported yet.
+    pause
+    exit /b 0
+)
+set "output_file=!file_dir!!file_base!_comp!output_ext!"
+
+:: Prompt for value and unit
+set "fixed_value="
+set "fixed_unit="
+echo.
+set /p fixed_value="Enter target file size value (e.g., 20): "
+if "%fixed_value%"=="" (
+    echo [ERROR] Value is required!
+    pause
+    exit /b 0
+)
+set /a fixed_value_num=%fixed_value% 2>nul
+if "%fixed_value_num%"=="0" (
+    echo [ERROR] Please enter a valid positive number!
+    pause
+    exit /b 0
+)
+echo Enter unit (B, KB, MB):
+set /p fixed_unit="Unit: "
+if /i "%fixed_unit%"=="KB" set /a target_bytes=%fixed_value%*1024
+if /i "%fixed_unit%"=="MB" set /a target_bytes=%fixed_value%*1024*1024
+if /i "%fixed_unit%"=="B" set /a target_bytes=%fixed_value%
+if not defined target_bytes (
+    echo [ERROR] Invalid unit! Please enter B, KB, or MB.
+    pause
+    exit /b 0
+)
+if %target_bytes% lss 1024 set target_bytes=1024
+
+:: Check if target is less than original
+if %target_bytes% geq %orig_size% (
+    echo [ERROR] Target size must be less than original file size!
+    pause
+    exit /b 0
+)
+
+echo.
+echo ..*..Compression Summary..*..
+echo.
+echo Input file:     %input_file%
+echo Target Size:    %fixed_value%%fixed_unit% (%target_bytes% bytes)
+echo Output file:    !output_file!
+echo.
+call :prompt_yes_no "Proceed with compression? (Y/n): " "Y" confirm_comp_fixed
+if /i "%confirm_comp_fixed%"=="N" exit /b 0
+
+echo.
+echo ..*..Compressing to fixed size..*..
+echo.
+
+:: Iteratively compress by reducing quality
+setlocal enabledelayedexpansion
+set "quality=90"
+set "min_quality=10"
+set "step=5"
+set "done=0"
+if exist "!output_file!" del /f /q "!output_file!" >nul 2>&1
+
+:compress_loop
+magick "%input_file%" -quality !quality! "!output_file!"
+for %%A in ("!output_file!") do set "out_size=%%~zA"
+if not defined out_size set "out_size=0"
+if !out_size! lss %target_bytes% (
+    set "done=1"
+    goto compress_done
+)
+if !quality! leq !min_quality! (
+    echo [WARN] Minimum quality reached. Could not reach target size.
+    set "done=2"
+    goto compress_done
+)
+set /a quality-=step
+goto compress_loop
+
+:compress_done
+if !done! equ 1 (
+    echo.
+    echo [SUCCESS] File compressed to !out_size! bytes (target: %target_bytes% bytes)
+    echo Output: !output_file!
+    call :display_size "!output_file!" "New file size"
+) else (
+    echo.
+    echo [INFO] Final file size: !out_size! bytes (target: %target_bytes% bytes)
+    echo Output: !output_file!
+    call :display_size "!output_file!" "New file size"
+)
+endlocal
 
 echo.
 call :prompt_yes_no "Return to main menu? (Y/n): " "Y" return_menu_comp
@@ -521,8 +640,5 @@ echo Thank you for using Image Converter Suite!
 echo %HEADER_BORDER%
 echo.
 timeout /t 3 >nul
-goto end_script
-
-:end_script
 endlocal
-exit /b 0
+exit
