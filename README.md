@@ -14,7 +14,7 @@ Interactive prompts, sensible defaults, and a simple main menu make it fast to u
 - ✅ **Local File Detection**:
   - PDFs in script folder are listed for quick selection (PDF flow)
   - Images in script folder are listed for quick selection (Image conversion flow)
-- ✅ **Per‑PDF Output Folders**: PDF conversions save into `<PDF name>_image` (e.g., `Report_image`)
+    ✅ **Per‑PDF Output Folders**: PDF conversions save into `<PDF name>_images` (e.g., `Report_images`)
 - ✅ **Auto‑open Output (PDF only)**: After a successful PDF conversion, the output folder opens in Explorer
 - ✅ **Image Format Conversion**: Convert any supported image to another format
   - Options: `jpeg`, `jpg`, or `custom` (enter `avif`, `webp`, `tiff`, `bmp`, etc.)
@@ -23,9 +23,10 @@ Interactive prompts, sensible defaults, and a simple main menu make it fast to u
   - Does NOT auto‑open the folder
     -- ✅ **Compression**: Compress images or PDFs to a target file size percentage or a fixed file size
   - Target a specific percentage of the original file size (e.g., 50%)
-  - Or, compress images to a fixed file size (e.g., 20KB, 1MB)
-  - Supports both Images and PDFs for percentage; fixed size for images only
+  - Or, compress images to a fixed file size (e.g., 20KB, 1MB) (**fixed file size compression is only available for images, not PDFs**)
+  - Supports both Images and PDFs for percentage-based compression; fixed size for images only
   - Output file name: `<original_name>_comp.<ext>`
+  - **Note:** PDF compression may rasterize content to achieve the target size.
 - ✅ **Quoted/Absolute Path Support**: Paste full paths with or without quotes; the script Normalizes them
 - ✅ **Multiple Format Support**:
   - PDF export to: PNG, JPG, JPEG, BMP, TIFF, GIF
@@ -100,20 +101,9 @@ Enter your choice (default: 1):
 
 1. Optional: Pick a local PDF (auto‑detected):
 
-   - If there are any `*.pdf` files in the same folder as `Convert.bat`, the script will list them like:
-
-     ```
-     -- Local PDF detection --
-     Found 2 PDF(s) in script directory:
-     1. Example1.pdf
-     2. Example2.pdf
-
-     Select a PDF to use (1-2) or press Enter to skip: 1
-     Selected: F:\\Code\\Image-Tool\\Example1.pdf
-     Using selected PDF: F:\\Code\\Image-Tool\\Example1.pdf
-     ```
-
+   - If there are any `*.pdf` files in the same folder as `Convert.bat`, the script will list them for selection.
    - Enter a number to select and continue. Press Enter to skip and type a filename manually.
+   - **Robust local file detection and input validation**: The script checks for file existence and guides you through selection or manual entry.
 
 2. Follow the interactive prompts:
 
@@ -163,7 +153,9 @@ Command:        magick -density 300 "F:\\Code\\Image-Tool\\Example.pdf" -quality
 Proceed with conversion? (y/N): y
 ```
 
-Result: Creates `Example_image/Doc-0.png`, `Example_image/Doc-1.png`, etc., then opens that folder automatically.
+## Result: Creates `Example_images/Doc-0.png`, `Example_images/Doc-1.png`, etc., then opens that folder automatically.
+
+After any operation, the script thanks you and exits gracefully.
 
 ### Convert Image Format
 
@@ -199,7 +191,7 @@ Reduce the file size of an image or PDF by targeting a percentage of the origina
 
 ### Important Notes
 
-- 📁 **Output Location (PDF)**: Converted images are saved in a per‑PDF folder named `<PDF name>_image` in the current working directory. If folder creation fails, output falls back to the current directory.
+- 📁 **Output Location (PDF)**: Converted images are saved in a per‑PDF folder named `<PDF name>_images` in the current working directory. If folder creation fails, output falls back to the current directory.
 - �️ **Output Location (Image Conversion)**: Converted images are written next to the source image (same folder) with `_conv` in the filename.
 - �🗂️ **Local File Detection**: At startup, the script can list local PDFs (PDF flow) or local images (image conversion flow). To use files in a different folder, enter their full paths.
 - 🔄 **Automatic Folder Creation**: The script creates the per‑PDF output folder if it doesn't exist

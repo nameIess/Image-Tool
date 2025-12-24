@@ -37,19 +37,18 @@ Include screenshots, GIFs, or videos demonstrating the changes.
 
 Please ensure the following are completed before submitting:
 
-- [ ] Code follows project style guidelines
-- [ ] Tests pass locally
-- [ ] Documentation updated (if applicable)
-- [ ] No breaking changes introduced
-- [ ] Reviewed by at least one team member
+- [] Code follows project style guidelines
+- [] Tests pass locally
+- [] Documentation updated (if applicable)
+- [] No breaking changes introduced
+- [] Reviewed by at least one team member
 
 ## 💻 Environment Details
 
 If applicable, provide details about the environment where changes were tested:
 
 - OS: Windows / Linux / macOS
-- Python version:
-- Icons8-Collector version / commit:
+- Language version:
 
 ## 🧾 Additional Context
 
