@@ -23,8 +23,6 @@ Interactive prompts, sensible defaults, and a simple main menu make it fast to u
   - Does NOT auto‑open the folder
     -- ✅ **Compression**: Compress images or PDFs to a target file size percentage or a fixed file size
   - Target a specific percentage of the original file size (e.g., 50%)
-  - Or, compress images to a fixed file size (e.g., 20KB, 1MB) (**fixed file size compression is only available for images, not PDFs**)
-  - Supports both Images and PDFs for percentage-based compression; fixed size for images only
   - Output file name: `<original_name>_comp.<ext>`
   - **Note:** PDF compression may rasterize content to achieve the target size.
 - ✅ **Quoted/Absolute Path Support**: Paste full paths with or without quotes; the script Normalizes them
