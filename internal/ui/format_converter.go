@@ -1,16 +1,18 @@
-package tui
+package ui
 
 import (
 	"fmt"
 	"os"
-	"os/exec"
 	"path/filepath"
 	"strings"
+
+	"imagetool/internal/config"
+	"imagetool/internal/core"
+	"imagetool/internal/logging"
 
 	"github.com/charmbracelet/bubbles/key"
 	"github.com/charmbracelet/bubbles/textinput"
 	tea "github.com/charmbracelet/bubbletea"
-	"imagetool/internal/config"
 )
 
 // FormatStep tracks the conversion wizard step
@@ -26,8 +28,8 @@ const (
 
 // FormatConverterModel handles image format conversion
 type FormatConverterModel struct {
-	step         FormatStep
-	filePicker   *FilePickerModel
+	step       FormatStep
+	filePicker *FilePickerModel
 
 	// Settings
 	inputFile    string
@@ -35,15 +37,15 @@ type FormatConverterModel struct {
 	outputFile   string
 
 	// Format selection
-	formats       []string
-	formatCursor  int
-	customFormat  bool
-	customInput   textinput.Model
+	formats      []string
+	formatCursor int
+	customFormat bool
+	customInput  textinput.Model
 
 	// Results
-	result    string
-	isError   bool
-	fileSize  int64
+	result   string
+	isError  bool
+	fileSize int64
 
 	// Navigation
 	done       bool
@@ -71,6 +73,13 @@ func NewFormatConverterModel() *FormatConverterModel {
 		formatCursor: 0,
 		customInput:  customInput,
 	}
+}
+
+// formatConversionResultMsg contains conversion results
+type formatConversionResultMsg struct {
+	message  string
+	isError  bool
+	fileSize int64
 }
 
 // Update handles input
@@ -209,36 +218,40 @@ func (m *FormatConverterModel) buildOutputPath() {
 	m.outputFile = filepath.Join(dir, base+"_conv."+m.outputFormat)
 }
 
-// formatConversionResultMsg contains conversion results
-type formatConversionResultMsg struct {
-	message  string
-	isError  bool
-	fileSize int64
-}
-
-// runConversion executes the ImageMagick command
+// runConversion executes the ImageMagick command via core package
 func (m *FormatConverterModel) runConversion() tea.Msg {
-	// Run ImageMagick
-	cmd := exec.Command("magick", m.inputFile, m.outputFile)
-	output, err := cmd.CombinedOutput()
-	if err != nil {
+	logging.Info("Starting format conversion", map[string]interface{}{
+		"input":  m.inputFile,
+		"format": m.outputFormat,
+	})
+
+	result := core.ConvertImage(core.ConvertImageOptions{
+		InputPath:    m.inputFile,
+		OutputFormat: core.ImageFormat(m.outputFormat),
+		OutputPath:   m.outputFile,
+	})
+
+	if !result.Success {
+		logging.Error("Format conversion failed", map[string]interface{}{
+			"input": m.inputFile,
+			"error": result.Message,
+		})
 		return formatConversionResultMsg{
-			message: fmt.Sprintf("Conversion failed: %v\n%s", err, string(output)),
+			message: result.Message,
 			isError: true,
 		}
 	}
 
-	// Get output file size
-	info, err := os.Stat(m.outputFile)
-	var size int64
-	if err == nil {
-		size = info.Size()
-	}
+	logging.Info("Format conversion completed", map[string]interface{}{
+		"input":  m.inputFile,
+		"output": result.OutputPath,
+		"size":   result.OutputSize,
+	})
 
 	return formatConversionResultMsg{
 		message:  "Image converted successfully",
 		isError:  false,
-		fileSize: size,
+		fileSize: result.OutputSize,
 	}
 }
 
@@ -276,7 +289,7 @@ func (m *FormatConverterModel) View() string {
 					cursor = IconPointer + " "
 					style = selectedItemStyle
 				}
-				
+
 				display := strings.ToUpper(format)
 				if format == "custom" {
 					display = "Custom (enter any format)"
@@ -299,7 +312,7 @@ func (m *FormatConverterModel) View() string {
 		}
 
 		summaryBox := boxStyle.Render(
-			fmt.Sprintf("Input:   %s (%s)\n", filepath.Base(m.inputFile), formatSize(inputSize)) +
+			fmt.Sprintf("Input:   %s (%s)\n", filepath.Base(m.inputFile), core.FormatSize(inputSize)) +
 				fmt.Sprintf("Format:  %s → %s\n", strings.ToUpper(filepath.Ext(m.inputFile)[1:]), strings.ToUpper(m.outputFormat)) +
 				fmt.Sprintf("Output:  %s", filepath.Base(m.outputFile)),
 		)
@@ -320,7 +333,7 @@ func (m *FormatConverterModel) View() string {
 		} else {
 			b.WriteString(successStyle.Render(IconSuccess + " " + m.result))
 			b.WriteString("\n\n")
-			b.WriteString(descriptionStyle.Render(fmt.Sprintf("Output: %s (%s)", m.outputFile, formatSize(m.fileSize))))
+			b.WriteString(descriptionStyle.Render(fmt.Sprintf("Output: %s (%s)", m.outputFile, core.FormatSize(m.fileSize))))
 		}
 		b.WriteString("\n\n")
 		b.WriteString(helpStyle.Render("Enter/M Menu • A Convert Another • Q Quit"))

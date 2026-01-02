@@ -1,14 +1,15 @@
-package tui
+package ui
 
 import (
 	"fmt"
 	"os"
-	"os/exec"
 	"path/filepath"
 	"strconv"
 	"strings"
 
 	"imagetool/internal/config"
+	"imagetool/internal/core"
+	"imagetool/internal/logging"
 
 	"github.com/charmbracelet/bubbles/key"
 	"github.com/charmbracelet/bubbles/textinput"
@@ -28,14 +29,6 @@ const (
 	CompressStepDone
 )
 
-// CompressionMethod defines how to compress
-type CompressionMethod int
-
-const (
-	CompressMethodPercent CompressionMethod = iota
-	CompressMethodFixedSize
-)
-
 // CompressorModel handles file compression
 type CompressorModel struct {
 	step       CompressStep
@@ -45,7 +38,7 @@ type CompressorModel struct {
 	inputFile     string
 	outputFile    string
 	inputSize     int64
-	method        CompressionMethod
+	method        core.CompressMethod
 	targetPercent int
 	targetBytes   int64
 
@@ -105,6 +98,13 @@ func NewCompressorModel() *CompressorModel {
 	}
 }
 
+// compressResultMsg contains compression results
+type compressResultMsg struct {
+	message    string
+	isError    bool
+	outputSize int64
+}
+
 // Update handles input
 func (m *CompressorModel) Update(msg tea.Msg) (*CompressorModel, tea.Cmd) {
 	var cmd tea.Cmd
@@ -145,8 +145,8 @@ func (m *CompressorModel) Update(msg tea.Msg) (*CompressorModel, tea.Cmd) {
 					m.methodCursor = 0
 				}
 			case key.Matches(msg, keys.Enter):
-				m.method = CompressionMethod(m.methodCursor)
-				if m.method == CompressMethodPercent {
+				m.method = core.CompressMethod(m.methodCursor)
+				if m.method == core.CompressMethodPercent {
 					m.step = CompressStepSetPercent
 					m.percentInput.Focus()
 					return m, textinput.Blink
@@ -312,7 +312,7 @@ func (m *CompressorModel) Update(msg tea.Msg) (*CompressorModel, tea.Cmd) {
 				m.step = CompressStepCompressing
 				return m, m.runCompression
 			case "n", "N", "esc":
-				if m.method == CompressMethodPercent {
+				if m.method == core.CompressMethodPercent {
 					m.step = CompressStepSetPercent
 					m.percentInput.Focus()
 					return m, textinput.Blink
@@ -377,57 +377,43 @@ func (m *CompressorModel) buildOutputPath() {
 	m.outputFile = filepath.Join(dir, base+"_comp"+ext)
 }
 
-// compressResultMsg contains compression results
-type compressResultMsg struct {
-	message    string
-	isError    bool
-	outputSize int64
-}
-
-// runCompression executes the ImageMagick command
+// runCompression executes compression via core package
 func (m *CompressorModel) runCompression() tea.Msg {
-	// Build ImageMagick arguments based on output format
-	ext := strings.ToLower(filepath.Ext(m.outputFile))
-	args := []string{m.inputFile}
+	logging.Info("Starting compression", map[string]interface{}{
+		"input":       m.inputFile,
+		"method":      m.method,
+		"targetBytes": m.targetBytes,
+	})
 
-	// Use jpeg:extent for target size compression when output is JPEG
-	if ext == ".jpg" || ext == ".jpeg" {
-		targetSize := fmt.Sprintf("%d", m.targetBytes)
-		args = append(args, "-define", fmt.Sprintf("jpeg:extent=%s", targetSize))
-	}
-	args = append(args, m.outputFile)
+	result := core.CompressFile(core.CompressOptions{
+		InputPath:     m.inputFile,
+		Method:        m.method,
+		TargetPercent: m.targetPercent,
+		TargetBytes:   m.targetBytes,
+		OutputPath:    m.outputFile,
+	})
 
-	cmd := exec.Command("magick", args...)
-
-	output, err := cmd.CombinedOutput()
-	if err != nil {
+	if !result.Success {
+		logging.Error("Compression failed", map[string]interface{}{
+			"input": m.inputFile,
+			"error": result.Message,
+		})
 		return compressResultMsg{
-			message: fmt.Sprintf("Compression failed: %v\n%s", err, string(output)),
+			message: result.Message,
 			isError: true,
 		}
 	}
 
-	// Get output file size
-	var outputSize int64
-	if info, err := os.Stat(m.outputFile); err == nil {
-		outputSize = info.Size()
-	}
-
-	// Check if we achieved target
-	reduction := 0.0
-	if m.inputSize > 0 {
-		reduction = float64(m.inputSize-outputSize) / float64(m.inputSize) * 100
-	}
-
-	msg := fmt.Sprintf("Compressed successfully! Reduced by %.1f%%", reduction)
-	if outputSize > m.targetBytes {
-		msg = fmt.Sprintf("Compressed, but couldn't reach target. Best possible: %s", formatSize(outputSize))
-	}
+	logging.Info("Compression completed", map[string]interface{}{
+		"input":      m.inputFile,
+		"output":     result.OutputPath,
+		"outputSize": result.OutputSize,
+	})
 
 	return compressResultMsg{
-		message:    msg,
+		message:    result.Message,
 		isError:    false,
-		outputSize: outputSize,
+		outputSize: result.OutputSize,
 	}
 }
 
@@ -449,7 +435,7 @@ func (m *CompressorModel) View() string {
 		b.WriteString(inputLabelStyle.Render("Select compression method:"))
 		b.WriteString("\n\n")
 
-		b.WriteString(descriptionStyle.Render(fmt.Sprintf("Input file: %s (%s)", filepath.Base(m.inputFile), formatSize(m.inputSize))))
+		b.WriteString(descriptionStyle.Render(fmt.Sprintf("Input file: %s (%s)", filepath.Base(m.inputFile), core.FormatSize(m.inputSize))))
 		b.WriteString("\n\n")
 
 		for i, method := range m.methods {
@@ -491,7 +477,7 @@ func (m *CompressorModel) View() string {
 				preview = m.inputSize * int64(pct) / 100
 			}
 		}
-		b.WriteString(descriptionStyle.Render(fmt.Sprintf("Current: %s → Target: ~%s", formatSize(m.inputSize), formatSize(preview))))
+		b.WriteString(descriptionStyle.Render(fmt.Sprintf("Current: %s → Target: ~%s", core.FormatSize(m.inputSize), core.FormatSize(preview))))
 		b.WriteString("\n\n")
 		b.WriteString(helpStyle.Render("Enter to confirm • Esc Back"))
 
@@ -508,7 +494,7 @@ func (m *CompressorModel) View() string {
 			b.WriteString("Size: ")
 			b.WriteString(m.sizeInput.View())
 			b.WriteString("\n\n")
-			b.WriteString(descriptionStyle.Render(fmt.Sprintf("Current: %s | Enter number then press K for KB, M for MB, or Enter for unit selection", formatSize(m.inputSize))))
+			b.WriteString(descriptionStyle.Render(fmt.Sprintf("Current: %s | Enter number then press K for KB, M for MB, or Enter for unit selection", core.FormatSize(m.inputSize))))
 		}
 		b.WriteString("\n\n")
 		b.WriteString(helpStyle.Render("Enter to continue • K=KB M=MB • Esc Back"))
@@ -519,15 +505,15 @@ func (m *CompressorModel) View() string {
 
 		methodStr := "Percentage"
 		targetStr := fmt.Sprintf("%d%% of original", m.targetPercent)
-		if m.method == CompressMethodFixedSize {
+		if m.method == core.CompressMethodFixedSize {
 			methodStr = "Fixed Size"
 			targetStr = fmt.Sprintf("%d %s", m.sizeValue, m.sizeUnit)
 		}
 
 		summaryBox := boxStyle.Render(
-			fmt.Sprintf("Input:   %s (%s)\n", filepath.Base(m.inputFile), formatSize(m.inputSize)) +
+			fmt.Sprintf("Input:   %s (%s)\n", filepath.Base(m.inputFile), core.FormatSize(m.inputSize)) +
 				fmt.Sprintf("Method:  %s\n", methodStr) +
-				fmt.Sprintf("Target:  %s (%s)\n", targetStr, formatSize(m.targetBytes)) +
+				fmt.Sprintf("Target:  %s (%s)\n", targetStr, core.FormatSize(m.targetBytes)) +
 				fmt.Sprintf("Output:  %s", filepath.Base(m.outputFile)),
 		)
 		b.WriteString(summaryBox)
@@ -553,7 +539,7 @@ func (m *CompressorModel) View() string {
 		} else {
 			b.WriteString(successStyle.Render(IconSuccess + " " + m.result))
 			b.WriteString("\n\n")
-			b.WriteString(descriptionStyle.Render(fmt.Sprintf("Original: %s → Compressed: %s", formatSize(m.inputSize), formatSize(m.outputSize))))
+			b.WriteString(descriptionStyle.Render(fmt.Sprintf("Original: %s → Compressed: %s", core.FormatSize(m.inputSize), core.FormatSize(m.outputSize))))
 			b.WriteString("\n")
 			b.WriteString(descriptionStyle.Render(fmt.Sprintf("Output: %s", m.outputFile)))
 		}

@@ -1,7 +1,10 @@
-package tui
+package ui
 
 import (
 	"strings"
+
+	"imagetool/internal/deps"
+	"imagetool/internal/logging"
 
 	"github.com/charmbracelet/bubbles/key"
 	tea "github.com/charmbracelet/bubbletea"
@@ -12,7 +15,8 @@ import (
 type View int
 
 const (
-	ViewMenu View = iota
+	ViewDependencyCheck View = iota
+	ViewMenu
 	ViewPDFConverter
 	ViewFormatConverter
 	ViewCompressor
@@ -28,19 +32,24 @@ type MenuItem struct {
 
 // App is the main application model
 type App struct {
-	currentView    View
-	menuItems      []MenuItem
-	menuCursor     int
-	width          int
-	height         int
-	quitting       bool
-	
+	currentView View
+	menuItems   []MenuItem
+	menuCursor  int
+	width       int
+	height      int
+	quitting    bool
+
+	// Dependency status
+	depResult   deps.CheckResult
+	depChecked  bool
+	depBlocking bool
+
 	// Sub-models
 	pdfConverter    *PDFConverterModel
 	formatConverter *FormatConverterModel
 	compressor      *CompressorModel
 	filePicker      *FilePickerModel
-	
+
 	// Shared state
 	statusMessage string
 	isError       bool
@@ -48,12 +57,12 @@ type App struct {
 
 // KeyMap defines key bindings
 type KeyMap struct {
-	Up     key.Binding
-	Down   key.Binding
-	Enter  key.Binding
-	Back   key.Binding
-	Quit   key.Binding
-	Help   key.Binding
+	Up    key.Binding
+	Down  key.Binding
+	Enter key.Binding
+	Back  key.Binding
+	Quit  key.Binding
+	Help  key.Binding
 }
 
 var keys = KeyMap{
@@ -86,7 +95,7 @@ var keys = KeyMap{
 // NewApp creates a new application instance
 func NewApp() *App {
 	return &App{
-		currentView: ViewMenu,
+		currentView: ViewDependencyCheck,
 		menuItems: []MenuItem{
 			{Title: "PDF to Image Converter", Description: "Convert PDF pages to images (PNG, JPG, etc.)", Icon: IconPDF},
 			{Title: "Convert Image Format", Description: "Convert images between formats (WebP, AVIF, etc.)", Icon: IconConvert},
@@ -101,6 +110,11 @@ func NewApp() *App {
 	}
 }
 
+// dependencyCheckMsg contains dependency check results
+type dependencyCheckMsg struct {
+	result deps.CheckResult
+}
+
 // Init implements tea.Model
 func (a *App) Init() tea.Cmd {
 	return tea.Batch(
@@ -111,15 +125,8 @@ func (a *App) Init() tea.Cmd {
 
 // checkDependencies verifies ImageMagick and Ghostscript are available
 func checkDependencies() tea.Msg {
-	return dependencyCheckMsg{
-		magickOK: checkMagick(),
-		gsOK:     checkGhostscript(),
-	}
-}
-
-type dependencyCheckMsg struct {
-	magickOK bool
-	gsOK     bool
+	result := deps.Check()
+	return dependencyCheckMsg{result: result}
 }
 
 // Update implements tea.Model
@@ -127,7 +134,7 @@ func (a *App) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 	switch msg := msg.(type) {
 	case tea.KeyMsg:
 		// Global quit
-		if key.Matches(msg, keys.Quit) && a.currentView == ViewMenu {
+		if key.Matches(msg, keys.Quit) && (a.currentView == ViewMenu || a.currentView == ViewDependencyCheck) {
 			a.quitting = true
 			return a, tea.Quit
 		}
@@ -137,14 +144,33 @@ func (a *App) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 		a.height = msg.Height
 
 	case dependencyCheckMsg:
-		if !msg.magickOK {
-			a.statusMessage = "⚠️  ImageMagick not found - install from imagemagick.org"
+		a.depChecked = true
+		a.depResult = msg.result
+
+		logging.Info("Dependency check completed", map[string]interface{}{
+			"imagemagick": msg.result.ImageMagick.Status == deps.StatusOK,
+			"ghostscript": msg.result.Ghostscript.Status == deps.StatusOK,
+		})
+
+		if !msg.result.AllOK {
+			a.depBlocking = true
+			a.statusMessage = "Missing required dependencies"
 			a.isError = true
-		} else if !msg.gsOK {
-			a.statusMessage = "⚠️  Ghostscript not found - PDF features limited"
-			a.isError = false
+
+			// Log details
+			if msg.result.ImageMagick.Status != deps.StatusOK {
+				logging.Error("ImageMagick not available", map[string]interface{}{
+					"error": msg.result.ImageMagick.Error,
+				})
+			}
+			if msg.result.Ghostscript.Status != deps.StatusOK {
+				logging.Warn("Ghostscript not available", map[string]interface{}{
+					"error": msg.result.Ghostscript.Error,
+				})
+			}
 		} else {
-			a.statusMessage = "✓ ImageMagick & Ghostscript detected"
+			a.currentView = ViewMenu
+			a.statusMessage = "✓ All dependencies detected"
 			a.isError = false
 		}
 		return a, nil
@@ -152,6 +178,8 @@ func (a *App) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 
 	// Route to current view
 	switch a.currentView {
+	case ViewDependencyCheck:
+		return a.updateDependencyCheck(msg)
 	case ViewMenu:
 		return a.updateMenu(msg)
 	case ViewPDFConverter:
@@ -164,6 +192,25 @@ func (a *App) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 		return a.updateFilePicker(msg)
 	}
 
+	return a, nil
+}
+
+// updateDependencyCheck handles dependency check view
+func (a *App) updateDependencyCheck(msg tea.Msg) (tea.Model, tea.Cmd) {
+	switch msg := msg.(type) {
+	case tea.KeyMsg:
+		switch {
+		case key.Matches(msg, keys.Enter):
+			// If blocking, just quit
+			if a.depBlocking {
+				a.quitting = true
+				return a, tea.Quit
+			}
+		case key.Matches(msg, keys.Quit):
+			a.quitting = true
+			return a, tea.Quit
+		}
+	}
 	return a, nil
 }
 
@@ -213,7 +260,7 @@ func (a *App) updateMenu(msg tea.Msg) (tea.Model, tea.Cmd) {
 func (a *App) updatePDFConverter(msg tea.Msg) (tea.Model, tea.Cmd) {
 	var cmd tea.Cmd
 	a.pdfConverter, cmd = a.pdfConverter.Update(msg)
-	
+
 	if a.pdfConverter.IsDone() {
 		if a.pdfConverter.BackToMenu() {
 			a.currentView = ViewMenu
@@ -226,7 +273,7 @@ func (a *App) updatePDFConverter(msg tea.Msg) (tea.Model, tea.Cmd) {
 func (a *App) updateFormatConverter(msg tea.Msg) (tea.Model, tea.Cmd) {
 	var cmd tea.Cmd
 	a.formatConverter, cmd = a.formatConverter.Update(msg)
-	
+
 	if a.formatConverter.IsDone() {
 		if a.formatConverter.BackToMenu() {
 			a.currentView = ViewMenu
@@ -239,7 +286,7 @@ func (a *App) updateFormatConverter(msg tea.Msg) (tea.Model, tea.Cmd) {
 func (a *App) updateCompressor(msg tea.Msg) (tea.Model, tea.Cmd) {
 	var cmd tea.Cmd
 	a.compressor, cmd = a.compressor.Update(msg)
-	
+
 	if a.compressor.IsDone() {
 		if a.compressor.BackToMenu() {
 			a.currentView = ViewMenu
@@ -262,6 +309,8 @@ func (a *App) View() string {
 	}
 
 	switch a.currentView {
+	case ViewDependencyCheck:
+		return a.viewDependencyCheck()
 	case ViewMenu:
 		return a.viewMenu()
 	case ViewPDFConverter:
@@ -275,6 +324,82 @@ func (a *App) View() string {
 	}
 
 	return ""
+}
+
+// viewDependencyCheck renders the dependency check screen
+func (a *App) viewDependencyCheck() string {
+	var b strings.Builder
+
+	// Header
+	header := lipgloss.NewStyle().
+		Bold(true).
+		Foreground(lipgloss.Color("#FFFFFF")).
+		Background(primaryColor).
+		Padding(0, 2).
+		Render(" 🖼️  Image Tool ")
+
+	b.WriteString("\n")
+	b.WriteString(header)
+	b.WriteString("\n\n")
+
+	if !a.depChecked {
+		b.WriteString(progressStyle.Render("⏳ Checking dependencies..."))
+		b.WriteString("\n")
+		return b.String()
+	}
+
+	b.WriteString(inputLabelStyle.Render("Dependencies:"))
+	b.WriteString("\n\n")
+
+	// ImageMagick status
+	if a.depResult.ImageMagick.Status == deps.StatusOK {
+		b.WriteString(depOKStyle.Render("  " + a.depResult.ImageMagick.FormatStatus()))
+	} else {
+		b.WriteString(depErrorStyle.Render("  " + a.depResult.ImageMagick.FormatStatus()))
+	}
+	b.WriteString("\n")
+
+	// Ghostscript status
+	if a.depResult.Ghostscript.Status == deps.StatusOK {
+		b.WriteString(depOKStyle.Render("  " + a.depResult.Ghostscript.FormatStatus()))
+	} else {
+		b.WriteString(depErrorStyle.Render("  " + a.depResult.Ghostscript.FormatStatus()))
+	}
+	b.WriteString("\n\n")
+
+	if a.depBlocking {
+		b.WriteString(errorStyle.Render("─────────────────────────────────────────────────"))
+		b.WriteString("\n\n")
+
+		// Show detailed missing dependency info
+		if a.depResult.ImageMagick.Status != deps.StatusOK {
+			b.WriteString(errorStyle.Render("ImageMagick is required for all features."))
+			b.WriteString("\n")
+			b.WriteString(descriptionStyle.Render("  Purpose: " + a.depResult.ImageMagick.Description))
+			b.WriteString("\n")
+			b.WriteString(descriptionStyle.Render("  Download: " + a.depResult.ImageMagick.DownloadURL))
+			b.WriteString("\n")
+			b.WriteString(descriptionStyle.Render("  Minimum version: v" + a.depResult.ImageMagick.MinVersion))
+			b.WriteString("\n\n")
+		}
+
+		if a.depResult.Ghostscript.Status != deps.StatusOK {
+			b.WriteString(warningStyle.Render("Ghostscript is required for PDF processing."))
+			b.WriteString("\n")
+			b.WriteString(descriptionStyle.Render("  Purpose: " + a.depResult.Ghostscript.Description))
+			b.WriteString("\n")
+			b.WriteString(descriptionStyle.Render("  Download: " + a.depResult.Ghostscript.DownloadURL))
+			b.WriteString("\n\n")
+		}
+
+		b.WriteString(descriptionStyle.Render("After installation, ensure the tools are in your PATH."))
+		b.WriteString("\n")
+		b.WriteString(descriptionStyle.Render("Then restart this application."))
+		b.WriteString("\n\n")
+		b.WriteString(helpStyle.Render("Press Enter or Q to exit"))
+	}
+
+	return b.String()
 }
 
 // viewMenu renders the main menu
@@ -327,17 +452,22 @@ func (a *App) viewMenu() string {
 		b.WriteString("\n")
 	}
 
-	// Status bar
-	if a.statusMessage != "" {
-		var statusStyle lipgloss.Style
-		if a.isError {
-			statusStyle = errorStyle
-		} else {
-			statusStyle = successStyle
-		}
-		status := statusStyle.Render(a.statusMessage)
+	// Status bar with dependency info
+	if a.depChecked {
 		b.WriteString("\n")
-		b.WriteString(status)
+		b.WriteString(descriptionStyle.Render("───────────────────────────────────────────"))
+		b.WriteString("\n")
+
+		depStatus := depOKStyle.Render("  ✔ ImageMagick")
+		if a.depResult.ImageMagick.Version != "" && a.depResult.ImageMagick.Version != "detected" {
+			depStatus += depOKStyle.Render(" (" + a.depResult.ImageMagick.Version + ")")
+		}
+		depStatus += "  "
+		depStatus += depOKStyle.Render("✔ Ghostscript")
+		if a.depResult.Ghostscript.Version != "" && a.depResult.Ghostscript.Version != "detected" {
+			depStatus += depOKStyle.Render(" (" + a.depResult.Ghostscript.Version + ")")
+		}
+		b.WriteString(depStatus)
 	}
 
 	return b.String()

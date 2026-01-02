@@ -1,4 +1,6 @@
-package tui
+// Package ui provides the TUI (Terminal User Interface) for Image-Tool.
+// This layer handles rendering and input only - no system command execution.
+package ui
 
 import (
 	"github.com/charmbracelet/lipgloss"
@@ -12,7 +14,6 @@ var (
 	errorColor     = lipgloss.Color("#EF4444") // Red
 	subtleColor    = lipgloss.Color("#6B7280") // Gray
 	textColor      = lipgloss.Color("#F3F4F6") // Light gray
-	bgColor        = lipgloss.Color("#1F2937") // Dark background
 )
 
 // Styles
@@ -45,11 +46,6 @@ var (
 				Foreground(subtleColor).
 				Italic(true).
 				MarginTop(1)
-
-	// Status bar style
-	statusBarStyle = lipgloss.NewStyle().
-			Foreground(subtleColor).
-			MarginTop(1)
 
 	// Success style
 	successStyle = lipgloss.NewStyle().
@@ -97,24 +93,31 @@ var (
 	// Directory style
 	dirStyle = lipgloss.NewStyle().
 			Foreground(accentColor)
+
+	// Dependency status styles
+	depOKStyle = lipgloss.NewStyle().
+			Foreground(secondaryColor)
+
+	depErrorStyle = lipgloss.NewStyle().
+			Foreground(errorColor)
 )
 
 // Icons
 const (
-	IconFolder    = "📁"
-	IconFile      = "📄"
-	IconImage     = "🖼️"
-	IconPDF       = "📑"
-	IconCheck     = "✓"
-	IconCross     = "✗"
-	IconArrow     = "→"
-	IconPointer   = "▶"
-	IconCompress  = "📦"
-	IconConvert   = "🔄"
-	IconSettings  = "⚙️"
-	IconExit      = "❌"
-	IconSuccess   = "✅"
-	IconError     = "❌"
-	IconWarning   = "⚠️"
-	IconSpinner   = "◐"
+	IconFolder   = "📁"
+	IconFile     = "📄"
+	IconImage    = "🖼️"
+	IconPDF      = "📑"
+	IconCheck    = "✓"
+	IconCross    = "✗"
+	IconArrow    = "→"
+	IconPointer  = "▶"
+	IconCompress = "📦"
+	IconConvert  = "🔄"
+	IconSettings = "⚙️"
+	IconExit     = "❌"
+	IconSuccess  = "✅"
+	IconError    = "❌"
+	IconWarning  = "⚠️"
+	IconSpinner  = "◐"
 )

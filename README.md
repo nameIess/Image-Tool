@@ -1,6 +1,6 @@
-# 🖼️ ImageTool
+# 🖼️ Image-Tool
 
-ImageTool is a cross-platform terminal application for converting PDF files to images, converting between image formats, and compressing images or PDFs—all with an intuitive, interactive text user interface. Built in Go using the Bubble Tea TUI framework, it streamlines batch image processing and PDF conversion for developers, designers, and power users. [Image-Tool.exe](https://github.com/nameIess/Image-Tool/releases/download/Application/Image-Tool.exe)
+A Windows TUI (Terminal User Interface) application for image and PDF processing. Built in Go using the Bubble Tea framework, it provides an intuitive interactive interface for batch image processing, format conversion, and compression.
 
 ## ✨ Features
 
@@ -9,91 +9,87 @@ ImageTool is a cross-platform terminal application for converting PDF files to i
 - 🗜️ **Image/PDF Compressor** - Reduce file size by percentage or target size
 - 🖥️ **Interactive TUI** - Beautiful terminal interface with keyboard navigation
 - 📁 **Built-in File Picker** - Browse and select files without leaving the app
+- 📁 **Batch Processing** - Process entire folders of files
+- 🔄 **Drag-and-Drop Support** - Windows drag-and-drop functionality
 
-## 🖥️ Screenshots
+## 🏗️ Architecture
 
 ```
-┌─────────────────────────────────────────────────────────────┐
-│                      ImageTool v1.0                         │
-├─────────────────────────────────────────────────────────────┤
-│                                                             │
-│   [PDF]  PDF to Image Converter                             │
-│          Convert PDF pages to images (PNG, JPG, etc.)       │
-│                                                             │
-│   [IMG]  Convert Image Format                               │
-│          Convert images between formats (WebP, AVIF, etc.)  │
-│                                                             │
-│   [ZIP]  Compress Image/PDF                                 │
-│          Reduce file size by percentage or target size      │
-│                                                             │
-│   [X]    Exit                                               │
-│          Quit the application                               │
-│                                                             │
-├─────────────────────────────────────────────────────────────┤
-│  Up/k up | Down/j down | enter select | q quit              │
-└─────────────────────────────────────────────────────────────┘
+Image-Tool/
+├── cmd/
+│   └── imagetool/          # Application entrypoint only
+│       └── main.go
+├── internal/
+│   ├── ui/                 # TUI rendering and input handling
+│   │   ├── app.go          # Main application model
+│   │   ├── filepicker.go   # File selection component
+│   │   ├── pdf_converter.go
+│   │   ├── format_converter.go
+│   │   ├── compressor.go
+│   │   └── styles.go       # UI styling
+│   ├── core/               # Business logic (conversion, compression)
+│   │   └── core.go
+│   ├── deps/               # External tool detection
+│   │   └── deps.go
+│   ├── config/             # Persistent configuration
+│   │   └── config.go
+│   └── logging/            # Error and activity logging
+│       └── logging.go
+└── go.mod
 ```
 
-## ⚙️ Prerequisites
+### Layer Responsibilities
 
-Before using ImageTool, install the following dependencies:
+| Layer              | Responsibility                                               |
+| ------------------ | ------------------------------------------------------------ |
+| `cmd`              | Application entrypoint only - no business logic              |
+| `internal/ui`      | TUI rendering and input handling - no system commands        |
+| `internal/core`    | Conversion, compression, and workflow logic - no TUI code    |
+| `internal/deps`    | External tool detection and version checks - no UI rendering |
+| `internal/config`  | Persistent configuration via file                            |
+| `internal/logging` | Error and activity logging                                   |
 
-### 1️⃣ ImageMagick (Required)
+## ⚙️ Dependencies
 
-ImageMagick is used for all image processing operations.
+### ImageMagick (Required)
 
-**Windows:**
+ImageMagick v7.x is required for all image processing operations.
 
-- Download from [ImageMagick Downloads](https://imagemagick.org/script/download.php)
-- Run the installer and check **"Add application directory to your system path"**
+**Detection:** `magick -version`
 
-**macOS:**
+**Download:** [imagemagick.org/script/download.php](https://imagemagick.org/script/download.php)
 
-```bash
-brew install imagemagick
+> ⚠️ Install manually and ensure it's in your system PATH. This application does not install dependencies automatically.
+
+### Ghostscript (Required for PDF)
+
+Ghostscript is required for PDF processing operations.
+
+**Detection:** `gswin64c -version`
+
+**Download:** [ghostscript.com/releases/gsdnld.html](https://ghostscript.com/releases/gsdnld.html)
+
+> ⚠️ Install manually and ensure it's in your system PATH.
+
+### Startup Dependency Check
+
+On startup, the application verifies all dependencies:
+
+```
+Dependencies:
+  ✔ ImageMagick (7.1.0-62)
+  ✔ Ghostscript (10.02.1)
 ```
 
-**Linux (Ubuntu/Debian):**
-
-```bash
-sudo apt install imagemagick
-```
-
-### 2️⃣ Ghostscript (Required for PDF operations)
-
-Ghostscript enables PDF to image conversion.
-
-**Windows:**
-
-- Download from [Ghostscript Downloads](https://www.ghostscript.com/releases/gsdnld.html)
-- Install the appropriate version for your system
-
-**macOS:**
-
-```bash
-brew install ghostscript
-```
-
-**Linux (Ubuntu/Debian):**
-
-```bash
-sudo apt install ghostscript
-```
-
-### 3️⃣ Verify Installation
-
-```bash
-magick -version
-gs --version  # or gswin64c --version on Windows
-```
+If dependencies are missing, clear instructions and download links are provided.
 
 ## 🛠️ Installation
 
-### 1️⃣ Option 1: Download Pre-built Binary
+### Option 1: Download Pre-built Binary
 
-Download the latest release from the [Releases](https://github.com/nameIess/Image-Tool/releases) page.
+Download `Image-Tool.exe` from the [Releases](https://github.com/nameIess/Image-Tool/releases) page.
 
-### 2️⃣ Option 2: Build from Source
+### Option 2: Build from Source
 
 **Requirements:** Go 1.21 or higher
 
@@ -191,27 +187,41 @@ Reduce file size using two methods:
 ## 🗂️ Project Structure
 
 ```
-imagetool/
+Image-Tool/
 ├── cmd/
 │   └── imagetool/
-│       ├── main.go              # Application entry point
-│       └── versioninfo.json     # Windows version info
+│       └── main.go              # Application entry point
 ├── internal/
-│   ├── config/
-│   │   └── config.go            # Configuration and defaults
-│   └── tui/
-│       ├── app.go               # Main TUI application
-│       ├── filepicker.go        # File browser component
-│       ├── pdf_converter.go     # PDF to image converter
-│       ├── format_converter.go  # Image format converter
-│       ├── compressor.go        # File compressor
-│       ├── styles.go            # UI styles and themes
-│       └── utils.go             # Utility functions
+│   ├── ui/                      # TUI layer
+│   │   ├── app.go               # Main TUI application
+│   │   ├── filepicker.go        # File browser component
+│   │   ├── pdf_converter.go     # PDF to image converter UI
+│   │   ├── format_converter.go  # Image format converter UI
+│   │   ├── compressor.go        # File compressor UI
+│   │   └── styles.go            # UI styles and themes
+│   ├── core/                    # Business logic
+│   │   └── core.go              # Conversion and processing logic
+│   ├── deps/                    # Dependency detection
+│   │   └── deps.go              # Tool availability checks
+│   ├── config/                  # Configuration
+│   │   └── config.go            # Settings and defaults
+│   └── logging/                 # Logging
+│       └── logging.go           # Error and activity logging
 ├── go.mod
 ├── go.sum
 ├── LICENSE
 └── README.md
 ```
+
+## 🔒 Security
+
+This application follows strict security principles:
+
+- ❌ No automatic installation of external tools
+- ❌ No silent downloads
+- ❌ No privilege escalation
+- ❌ No PATH or registry modification
+- ✅ User-managed dependencies only
 
 ## 👨‍💻 Development
 

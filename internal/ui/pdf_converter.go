@@ -1,13 +1,13 @@
-package tui
+package ui
 
 import (
 	"fmt"
-	"os"
-	"os/exec"
 	"path/filepath"
 	"strings"
 
 	"imagetool/internal/config"
+	"imagetool/internal/core"
+	"imagetool/internal/logging"
 
 	"github.com/charmbracelet/bubbles/key"
 	"github.com/charmbracelet/bubbles/textinput"
@@ -95,6 +95,13 @@ func NewPDFConverterModel() *PDFConverterModel {
 	}
 }
 
+// conversionResultMsg contains conversion results
+type conversionResultMsg struct {
+	message string
+	isError bool
+	files   []string
+}
+
 // Update handles input
 func (m *PDFConverterModel) Update(msg tea.Msg) (*PDFConverterModel, tea.Cmd) {
 	var cmd tea.Cmd
@@ -111,7 +118,7 @@ func (m *PDFConverterModel) Update(msg tea.Msg) (*PDFConverterModel, tea.Cmd) {
 				m.step = PDFStepSelectFormat
 				// Set default output directory
 				m.outputDir = filepath.Join(filepath.Dir(m.inputFile),
-					strings.TrimSuffix(filepath.Base(m.inputFile), filepath.Ext(m.inputFile))+"_image")
+					strings.TrimSuffix(filepath.Base(m.inputFile), filepath.Ext(m.inputFile))+"_images")
 			}
 		}
 		return m, cmd
@@ -277,7 +284,7 @@ func (m *PDFConverterModel) Update(msg tea.Msg) (*PDFConverterModel, tea.Cmd) {
 				m.done = true
 			case "o": // Open output folder
 				if m.outputDir != "" {
-					openFolder(m.outputDir)
+					core.OpenFolder(m.outputDir)
 				}
 			case "q":
 				return m, tea.Quit
@@ -289,52 +296,41 @@ func (m *PDFConverterModel) Update(msg tea.Msg) (*PDFConverterModel, tea.Cmd) {
 	return m, nil
 }
 
-// conversionResultMsg contains conversion results
-type conversionResultMsg struct {
-	message string
-	isError bool
-	files   []string
-}
-
-// runConversion executes the ImageMagick command
+// runConversion executes the conversion via core package
 func (m *PDFConverterModel) runConversion() tea.Msg {
-	// Create output directory
-	if err := os.MkdirAll(m.outputDir, 0755); err != nil {
-		return conversionResultMsg{
-			message: fmt.Sprintf("Failed to create output directory: %v", err),
-			isError: true,
-		}
+	logging.Info("Starting PDF conversion", map[string]interface{}{
+		"input":   m.inputFile,
+		"format":  m.outputFormat,
+		"density": m.density,
+		"quality": m.quality,
+	})
+
+	result := core.ConvertPDFToImages(core.ConvertPDFOptions{
+		InputPath:    m.inputFile,
+		OutputFormat: core.ImageFormat(m.outputFormat),
+		OutputDir:    m.outputDir,
+		Density:      m.density,
+		Quality:      m.quality,
+		Prefix:       m.prefix,
+	})
+
+	if !result.Success {
+		logging.Error("PDF conversion failed", map[string]interface{}{
+			"input": m.inputFile,
+			"error": result.Message,
+		})
+	} else {
+		logging.Info("PDF conversion completed", map[string]interface{}{
+			"input":  m.inputFile,
+			"output": m.outputDir,
+			"pages":  len(result.OutputPaths),
+		})
 	}
-
-	// Build output pattern
-	outputPattern := filepath.Join(m.outputDir, m.prefix+"%d."+m.outputFormat)
-
-	// Run ImageMagick
-	cmd := exec.Command("magick",
-		"-density", fmt.Sprintf("%d", m.density),
-		m.inputFile,
-		"-quality", fmt.Sprintf("%d", m.quality),
-		outputPattern,
-	)
-
-	output, err := cmd.CombinedOutput()
-	if err != nil {
-		return conversionResultMsg{
-			message: fmt.Sprintf("Conversion failed: %v\n%s", err, string(output)),
-			isError: true,
-		}
-	}
-
-	// Count output files
-	var files []string
-	pattern := filepath.Join(m.outputDir, m.prefix+"*."+m.outputFormat)
-	matches, _ := filepath.Glob(pattern)
-	files = append(files, matches...)
 
 	return conversionResultMsg{
-		message: fmt.Sprintf("Successfully converted %d page(s)", len(files)),
-		isError: false,
-		files:   files,
+		message: result.Message,
+		isError: !result.Success,
+		files:   result.OutputPaths,
 	}
 }
 
