@@ -1,20 +1,34 @@
-# PDF to Image Converter
+# Image Converter Suite (Batch)
 
-A Windows batch script that converts PDF files to various image formats using ImageMagick. This tool provides an interactive command-line interface for easy PDF to image conversion with customizable settings.
+A Windows batch script powered by ImageMagick that lets you:
+
+- Convert PDFs to images, and
+- Convert images to a different format (e.g., PNG, JPG, AVIF, WEBP, TIFF, BMP).
+
+Interactive prompts, sensible defaults, and a simple main menu make it fast to use.
 
 ## Features
 
-- ✅ **Interactive User Prompts**: Prompts user for input PDF filename, output format, density, quality, and filename prefix
-- ✅ **Local PDF Detection & Selection**: Automatically lists PDF files in the script's folder at startup and lets you select one to use (skips the filename prompt)
-- ✅ **Per‑PDF Output Folders**: Images are saved to a folder named after the PDF, suffixed with `_image` (e.g., `Report_image`) to keep outputs separated
-- ✅ **Automatic Folder Open**: After successful conversion, the output folder opens automatically in Explorer
-- ✅ **Quoted/Absolute Path Support**: You can paste a full path with or without quotes; the script normalizes it safely
-- ✅ **Organized Output**: Saves all converted images inside the derived per‑PDF folder, or the current directory if folder creation fails
-- ✅ **Multiple Format Support**: Convert PDF files to PNG, JPG, JPEG, BMP, TIFF, GIF formats
-- ✅ **Customizable Settings**: Adjustable output quality (1-100) and density (DPI) settings
-- ✅ **Input Validation**: Comprehensive error checking and user-friendly feedback
-- ✅ **Batch Processing**: Convert multi-page PDFs with custom filename prefixes
-- ✅ **Smart Fallback**: Graceful handling when folder creation fails
+- ✅ **Main Menu with Defaults**: Choose operation by number; pressing Enter selects the default option
+- ✅ **Interactive Prompts**: All settings support defaults; just press Enter to accept
+- ✅ **Local File Detection**:
+  - PDFs in script folder are listed for quick selection (PDF flow)
+  - Images in script folder are listed for quick selection (Image conversion flow)
+- ✅ **Per‑PDF Output Folders**: PDF conversions save into `<PDF name>_image` (e.g., `Report_image`)
+- ✅ **Auto‑open Output (PDF only)**: After a successful PDF conversion, the output folder opens in Explorer
+- ✅ **Image Format Conversion**: Convert any supported image to another format
+  - Options: `jpeg`, `jpg`, or `custom` (enter `avif`, `webp`, `tiff`, `bmp`, etc.)
+  - Output file name: `<original_name>_conv.<format>`
+  - Shows converted file size in bytes/KB/MB
+  - Does NOT auto‑open the folder
+- ✅ **Quoted/Absolute Path Support**: Paste full paths with or without quotes; the script normalizes them
+- ✅ **Multiple Format Support**:
+  - PDF export to: PNG, JPG, JPEG, BMP, TIFF, GIF
+  - Image conversion to: any format supported by your ImageMagick build
+- ✅ **Customizable Settings (PDF)**: Adjustable output quality (1-100) and density (DPI)
+- ✅ **Input Validation**: Clear errors and helpful guidance
+- ✅ **Multi‑page PDFs**: Custom filename prefixes for page outputs
+- ✅ **Smart Fallback**: If folder creation fails, saves in current directory
 
 ## Installation Instructions
 
@@ -33,11 +47,13 @@ A Windows batch script that converts PDF files to various image formats using Im
    - Download and install the appropriate version for your system
 
 3. **Clone or Download the Repository:**
+
    ```cmd
-   git clone https://github.com/nameIess/pdf_converter.git
-   cd pdf_converter
+   git clone https://github.com/nameIess/Image-Tool.git
+   cd Image-Tool
    ```
-   Download: [pdf_converter](https://github.com/nameIess/pdf_converter/archive/refs/heads/master.zip)
+
+   Download: [Image-Tool](https://github.com/nameIess/Image-Tool/archive/refs/heads/master.zip)
 
 4. **Verify Installation:**
    ```cmd
@@ -49,22 +65,34 @@ A Windows batch script that converts PDF files to various image formats using Im
 ## Project Structure
 
 ```
-pdf_converter/
+Image-Tool/
 ├── Convert.bat          # Main conversion script
 └── README.md            # This documentation file
 ```
 
 ## Usage Instructions
 
-### Quick Start
+### Start
 
-1. **Run the Script:**
+Run the script and pick an operation from the main menu (Enter defaults to 1):
 
-   ```cmd
-   Convert.bat
-   ```
+```
+=========================================================
+*              Image Converter Suite                    *
+*                Using ImageMagick                      *
+=========================================================
 
-2. **Optional: Pick a local PDF (auto‑detected):**
+Select an operation:
+  1. PDF to Image Converter
+  2. Convert Image Format
+  0. Exit
+
+Enter your choice (default: 1):
+```
+
+### PDF to Image
+
+1. Optional: Pick a local PDF (auto‑detected):
 
    - If there are any `*.pdf` files in the same folder as `Convert.bat`, the script will list them like:
 
@@ -75,13 +103,13 @@ pdf_converter/
      2. Example2.pdf
 
      Select a PDF to use (1-2) or press Enter to skip: 1
-     Selected: F:\Code\pdf_converter\Example1.pdf
-     Using selected PDF: F:\Code\pdf_converter\Example1.pdf
+     Selected: F:\\Code\\Image-Tool\\Example1.pdf
+     Using selected PDF: F:\\Code\\Image-Tool\\Example1.pdf
      ```
 
    - Enter a number to select and continue. Press Enter to skip and type a filename manually.
 
-3. **Follow the Interactive Prompts:**
+2. Follow the interactive prompts:
 
    - **PDF filename**: Enter the full path or filename (e.g., `document.pdf`)
    - **Output format**: Choose from png, jpg, jpeg, bmp, tiff, gif (default: png)
@@ -89,11 +117,11 @@ pdf_converter/
    - **Quality**: Set compression quality 1-100 (default: 90)
    - **Filename prefix**: Set prefix for output files (default: Page-)
 
-4. **Review and Confirm:**
+3. Review and confirm:
    - Check the conversion summary
    - Confirm to proceed with conversion
 
-### Example Usage
+#### Example (PDF to PNG)
 
 ```
 =========================================================
@@ -106,8 +134,8 @@ Found 1 PDF(s) in script directory:
 1. Example.pdf
 
 Select a PDF to use (1-1) or press Enter to skip: 1
-Selected: F:\Code\pdf_converter\Example.pdf
-Using selected PDF: F:\Code\pdf_converter\Example.pdf
+Selected: F:\Code\Image-Tool\Example.pdf
+Using selected PDF: F:\Code\Image-Tool\Example.pdf
 
 -- Input Parameters --
 
@@ -118,26 +146,43 @@ Enter output filename prefix (default: Page-): Doc-
 
 ..*..Conversion Summary..*..
 
-Input PDF:      F:\Code\pdf_converter\Example.pdf
+Input PDF:      F:\Code\Image-Tool\Example.pdf
 Output format:  .png
 Density:        300
 Quality:        95
 Prefix:         Doc-
 Output folder:  Example_image\
-Command:        magick -density 300 "F:\\Code\\pdf_converter\\Example.pdf" -quality 95 "Example_image\Doc-%d.png"
+Command:        magick -density 300 "F:\\Code\\Image-Tool\\Example.pdf" -quality 95 "Example_image\Doc-%d.png"
 
 Proceed with conversion? (y/N): y
 ```
 
-**Result**: Creates `PDF_Images/Doc-0.png`, `PDF_Images/Doc-1.png`, etc.
+Result: Creates `Example_image/Doc-0.png`, `Example_image/Doc-1.png`, etc., then opens that folder automatically.
+
+### Convert Image Format
+
+Convert any supported image to another format. Output naming: `<original_name>_conv.<format>`.
+
+1. Optional: Pick a local image (auto‑detected in the script folder), or press Enter and paste a path.
+2. Choose output format:
+   - 1. `jpeg`
+   - 2. `jpg`
+   - 3. `custom` → type anything supported (e.g., `avif`, `webp`, `tiff`, `bmp`)
+3. Conversion runs and shows the resulting file size in bytes, KB, and MB.
+
+Notes:
+
+- The image conversion flow does NOT auto‑open Explorer.
+- Size display helps decide next actions (like manual compression outside the script).
 
 ## Notes and Troubleshooting
 
 ### Important Notes
 
-- 📁 **Output Location**: Converted images are saved in a per‑PDF folder named `<PDF name>_image` in the current working directory. If folder creation fails, output falls back to the current directory.
-- 🗂️ **Local PDF Detection**: At startup, the script scans the script folder for `*.pdf` and lets you pick one. To use a PDF in a different folder, either move it next to `Convert.bat` or enter its full path when prompted.
-- 🔄 **Automatic Folder Creation**: The script creates the `PDF_Images` directory if it doesn't exist
+- 📁 **Output Location (PDF)**: Converted images are saved in a per‑PDF folder named `<PDF name>_image` in the current working directory. If folder creation fails, output falls back to the current directory.
+- �️ **Output Location (Image Conversion)**: Converted images are written next to the source image (same folder) with `_conv` in the filename.
+- �🗂️ **Local File Detection**: At startup, the script can list local PDFs (PDF flow) or local images (image conversion flow). To use files in a different folder, enter their full paths.
+- 🔄 **Automatic Folder Creation**: The script creates the per‑PDF output folder if it doesn't exist
 - 📋 **Multi-page Support**: Each page of the PDF becomes a separate image file
 - 🔢 **File Naming**: Output files use the format: `[prefix][page-number].[format]`
 - ⚡ **Performance**: Higher density values create larger, higher-quality images but take more time
@@ -195,6 +240,15 @@ If you encounter any issues:
 
 ## Version History
 
+- **v1.3** - Introduced main menu; added Image Format Conversion (jpeg/jpg/custom); shows converted image file size; PDF conversions auto‑open folder; image conversions do not.
 - **v1.2** - Per‑PDF output folders (`<name>_image`), automatic opening of the output folder after success, improved robust handling of quoted/absolute input paths, and a single final exit instead of multiple pauses.
 - **v1.1** - Added local PDF detection and selection at startup; selected file is used automatically for conversion (no auto-open).
 - **v1.0** - Initial release with basic PDF to image conversion functionality.
+
+## Roadmap
+
+- Compression (next):
+  - Optional post‑conversion compression for images
+  - Presets (Light/Medium/Heavy/Maximum) and Lossless mode
+  - Output naming like `<original_name>_conv_comp.<format>` or `<original_name>_comp.<ext>`
+  - File size comparison before/after
