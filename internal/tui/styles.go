@@ -112,7 +112,7 @@ const (
 	IconCompress = "📦"
 	IconConvert  = "🔄"
 	IconSettings = "⚙️"
-	IconExit     = "❌"
+	IconExit     = "🚪"
 	IconSuccess  = "✅"
 	IconError    = "❌"
 	IconWarning  = "⚠️"
