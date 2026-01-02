@@ -70,7 +70,6 @@ Icon?
 dist/
 build/
 release/
-log/
 
 # Log Files (Extended)
 # -------------------
