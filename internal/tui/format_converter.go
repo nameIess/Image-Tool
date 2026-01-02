@@ -26,8 +26,8 @@ const (
 
 // FormatConverterModel handles image format conversion
 type FormatConverterModel struct {
-	step         FormatStep
-	filePicker   *FilePickerModel
+	step       FormatStep
+	filePicker *FilePickerModel
 
 	// Settings
 	inputFile    string
@@ -35,15 +35,15 @@ type FormatConverterModel struct {
 	outputFile   string
 
 	// Format selection
-	formats       []string
-	formatCursor  int
-	customFormat  bool
-	customInput   textinput.Model
+	formats      []string
+	formatCursor int
+	customFormat bool
+	customInput  textinput.Model
 
 	// Results
-	result    string
-	isError   bool
-	fileSize  int64
+	result   string
+	isError  bool
+	fileSize int64
 
 	// Navigation
 	done       bool
@@ -276,7 +276,7 @@ func (m *FormatConverterModel) View() string {
 					cursor = IconPointer + " "
 					style = selectedItemStyle
 				}
-				
+
 				display := strings.ToUpper(format)
 				if format == "custom" {
 					display = "Custom (enter any format)"

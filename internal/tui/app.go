@@ -28,19 +28,19 @@ type MenuItem struct {
 
 // App is the main application model
 type App struct {
-	currentView    View
-	menuItems      []MenuItem
-	menuCursor     int
-	width          int
-	height         int
-	quitting       bool
-	
+	currentView View
+	menuItems   []MenuItem
+	menuCursor  int
+	width       int
+	height      int
+	quitting    bool
+
 	// Sub-models
 	pdfConverter    *PDFConverterModel
 	formatConverter *FormatConverterModel
 	compressor      *CompressorModel
 	filePicker      *FilePickerModel
-	
+
 	// Shared state
 	statusMessage string
 	isError       bool
@@ -48,12 +48,12 @@ type App struct {
 
 // KeyMap defines key bindings
 type KeyMap struct {
-	Up     key.Binding
-	Down   key.Binding
-	Enter  key.Binding
-	Back   key.Binding
-	Quit   key.Binding
-	Help   key.Binding
+	Up    key.Binding
+	Down  key.Binding
+	Enter key.Binding
+	Back  key.Binding
+	Quit  key.Binding
+	Help  key.Binding
 }
 
 var keys = KeyMap{
@@ -213,7 +213,7 @@ func (a *App) updateMenu(msg tea.Msg) (tea.Model, tea.Cmd) {
 func (a *App) updatePDFConverter(msg tea.Msg) (tea.Model, tea.Cmd) {
 	var cmd tea.Cmd
 	a.pdfConverter, cmd = a.pdfConverter.Update(msg)
-	
+
 	if a.pdfConverter.IsDone() {
 		if a.pdfConverter.BackToMenu() {
 			a.currentView = ViewMenu
@@ -226,7 +226,7 @@ func (a *App) updatePDFConverter(msg tea.Msg) (tea.Model, tea.Cmd) {
 func (a *App) updateFormatConverter(msg tea.Msg) (tea.Model, tea.Cmd) {
 	var cmd tea.Cmd
 	a.formatConverter, cmd = a.formatConverter.Update(msg)
-	
+
 	if a.formatConverter.IsDone() {
 		if a.formatConverter.BackToMenu() {
 			a.currentView = ViewMenu
@@ -239,7 +239,7 @@ func (a *App) updateFormatConverter(msg tea.Msg) (tea.Model, tea.Cmd) {
 func (a *App) updateCompressor(msg tea.Msg) (tea.Model, tea.Cmd) {
 	var cmd tea.Cmd
 	a.compressor, cmd = a.compressor.Update(msg)
-	
+
 	if a.compressor.IsDone() {
 		if a.compressor.BackToMenu() {
 			a.currentView = ViewMenu
