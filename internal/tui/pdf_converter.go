@@ -7,10 +7,11 @@ import (
 	"path/filepath"
 	"strings"
 
+	"imagetool/internal/config"
+
 	"github.com/charmbracelet/bubbles/key"
 	"github.com/charmbracelet/bubbles/textinput"
 	tea "github.com/charmbracelet/bubbletea"
-	"imagetool/internal/config"
 )
 
 // PDFStep tracks the conversion wizard step
@@ -29,9 +30,9 @@ const (
 
 // PDFConverterModel handles PDF to image conversion
 type PDFConverterModel struct {
-	step         PDFStep
-	filePicker   *FilePickerModel
-	
+	step       PDFStep
+	filePicker *FilePickerModel
+
 	// Settings
 	inputFile    string
 	outputFormat string
@@ -39,26 +40,24 @@ type PDFConverterModel struct {
 	quality      int
 	prefix       string
 	outputDir    string
-	
+
 	// Format selection
 	formats      []string
 	formatCursor int
-	
+
 	// Text inputs
 	densityInput textinput.Model
 	qualityInput textinput.Model
 	prefixInput  textinput.Model
-	
+
 	// Results
-	converting   bool
-	progress     string
-	result       string
-	isError      bool
-	outputFiles  []string
-	
+	result      string
+	isError     bool
+	outputFiles []string
+
 	// Navigation
-	done         bool
-	backToMenu   bool
+	done       bool
+	backToMenu bool
 }
 
 // NewPDFConverterModel creates a new PDF converter
@@ -111,8 +110,8 @@ func (m *PDFConverterModel) Update(msg tea.Msg) (*PDFConverterModel, tea.Cmd) {
 				m.inputFile = m.filePicker.SelectedFile()
 				m.step = PDFStepSelectFormat
 				// Set default output directory
-				m.outputDir = filepath.Join(filepath.Dir(m.inputFile), 
-					strings.TrimSuffix(filepath.Base(m.inputFile), filepath.Ext(m.inputFile))+"_images")
+				m.outputDir = filepath.Join(filepath.Dir(m.inputFile),
+					strings.TrimSuffix(filepath.Base(m.inputFile), filepath.Ext(m.inputFile))+"_image")
 			}
 		}
 		return m, cmd
@@ -154,12 +153,17 @@ func (m *PDFConverterModel) Update(msg tea.Msg) (*PDFConverterModel, tea.Cmd) {
 				if val == "" {
 					m.density = config.DefaultDensity
 				} else {
-					fmt.Sscanf(val, "%d", &m.density)
-					if m.density < 72 {
-						m.density = 72
+					var parsedDensity int
+					if _, err := fmt.Sscanf(val, "%d", &parsedDensity); err != nil {
+						m.density = config.DefaultDensity
+					} else {
+						m.density = parsedDensity
 					}
-					if m.density > 600 {
-						m.density = 600
+					if m.density < config.MinDensity {
+						m.density = config.MinDensity
+					}
+					if m.density > config.MaxDensity {
+						m.density = config.MaxDensity
 					}
 				}
 				m.step = PDFStepSetQuality
@@ -184,7 +188,12 @@ func (m *PDFConverterModel) Update(msg tea.Msg) (*PDFConverterModel, tea.Cmd) {
 				if val == "" {
 					m.quality = config.DefaultQuality
 				} else {
-					fmt.Sscanf(val, "%d", &m.quality)
+					var parsedQuality int
+					if _, err := fmt.Sscanf(val, "%d", &parsedQuality); err != nil {
+						m.quality = config.DefaultQuality
+					} else {
+						m.quality = parsedQuality
+					}
 					if m.quality < 1 {
 						m.quality = 1
 					}
@@ -268,7 +277,7 @@ func (m *PDFConverterModel) Update(msg tea.Msg) (*PDFConverterModel, tea.Cmd) {
 				m.done = true
 			case "o": // Open output folder
 				if m.outputDir != "" {
-					exec.Command("explorer", m.outputDir).Start()
+					openFolder(m.outputDir)
 				}
 			case "q":
 				return m, tea.Quit
@@ -346,7 +355,7 @@ func (m *PDFConverterModel) View() string {
 	case PDFStepSelectFormat:
 		b.WriteString(inputLabelStyle.Render("Select output format:"))
 		b.WriteString("\n\n")
-		
+
 		for i, format := range m.formats {
 			cursor := "  "
 			style := menuItemStyle
@@ -383,7 +392,7 @@ func (m *PDFConverterModel) View() string {
 		b.WriteString("\n\n")
 		b.WriteString(m.prefixInput.View())
 		b.WriteString("\n\n")
-		b.WriteString(descriptionStyle.Render(fmt.Sprintf("Output: %s0.%s, %s1.%s, ... Default: %s", 
+		b.WriteString(descriptionStyle.Render(fmt.Sprintf("Output: %s0.%s, %s1.%s, ... Default: %s",
 			m.prefix, m.outputFormat, m.prefix, m.outputFormat, config.DefaultPrefix)))
 		b.WriteString("\n\n")
 		b.WriteString(helpStyle.Render("Enter to confirm • Esc Back"))
@@ -391,14 +400,14 @@ func (m *PDFConverterModel) View() string {
 	case PDFStepConfirm:
 		b.WriteString(inputLabelStyle.Render("Conversion Summary"))
 		b.WriteString("\n\n")
-		
+
 		summaryBox := boxStyle.Render(
 			fmt.Sprintf("Input:    %s\n", filepath.Base(m.inputFile)) +
-			fmt.Sprintf("Format:   %s\n", strings.ToUpper(m.outputFormat)) +
-			fmt.Sprintf("Density:  %d DPI\n", m.density) +
-			fmt.Sprintf("Quality:  %d\n", m.quality) +
-			fmt.Sprintf("Prefix:   %s\n", m.prefix) +
-			fmt.Sprintf("Output:   %s", m.outputDir),
+				fmt.Sprintf("Format:   %s\n", strings.ToUpper(m.outputFormat)) +
+				fmt.Sprintf("Density:  %d DPI\n", m.density) +
+				fmt.Sprintf("Quality:  %d\n", m.quality) +
+				fmt.Sprintf("Prefix:   %s\n", m.prefix) +
+				fmt.Sprintf("Output:   %s", m.outputDir),
 		)
 		b.WriteString(summaryBox)
 		b.WriteString("\n\n")

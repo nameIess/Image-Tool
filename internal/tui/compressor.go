@@ -8,10 +8,11 @@ import (
 	"strconv"
 	"strings"
 
+	"imagetool/internal/config"
+
 	"github.com/charmbracelet/bubbles/key"
 	"github.com/charmbracelet/bubbles/textinput"
 	tea "github.com/charmbracelet/bubbletea"
-	"imagetool/internal/config"
 )
 
 // CompressStep tracks the compression wizard step
@@ -37,8 +38,8 @@ const (
 
 // CompressorModel handles file compression
 type CompressorModel struct {
-	step         CompressStep
-	filePicker   *FilePickerModel
+	step       CompressStep
+	filePicker *FilePickerModel
 
 	// Settings
 	inputFile     string
@@ -49,22 +50,22 @@ type CompressorModel struct {
 	targetBytes   int64
 
 	// Method selection
-	methods       []string
-	methodCursor  int
+	methods      []string
+	methodCursor int
 
 	// Text inputs
-	percentInput  textinput.Model
-	sizeInput     textinput.Model
-	unitInput     textinput.Model
+	percentInput textinput.Model
+	sizeInput    textinput.Model
+	unitInput    textinput.Model
 
 	// Fixed size state
-	sizeValue     int
-	sizeUnit      string // B, KB, MB
+	sizeValue int
+	sizeUnit  string // B, KB, MB
 
 	// Results
-	result      string
-	isError     bool
-	outputSize  int64
+	result     string
+	isError    bool
+	outputSize int64
 
 	// Navigation
 	done       bool
@@ -93,7 +94,7 @@ func NewCompressorModel() *CompressorModel {
 
 	return &CompressorModel{
 		step:          CompressStepSelectFile,
-		filePicker:   fp,
+		filePicker:    fp,
 		methods:       []string{"By Percentage", "Fixed File Size"},
 		methodCursor:  0,
 		targetPercent: config.DefaultCompressPercent,
@@ -170,7 +171,12 @@ func (m *CompressorModel) Update(msg tea.Msg) (*CompressorModel, tea.Cmd) {
 				if val == "" {
 					m.targetPercent = config.DefaultCompressPercent
 				} else {
-					m.targetPercent, _ = strconv.Atoi(val)
+					parsedPercent, err := strconv.Atoi(val)
+					if err != nil {
+						m.targetPercent = config.DefaultCompressPercent
+					} else {
+						m.targetPercent = parsedPercent
+					}
 					if m.targetPercent < 1 {
 						m.targetPercent = 1
 					}
@@ -202,7 +208,12 @@ func (m *CompressorModel) Update(msg tea.Msg) (*CompressorModel, tea.Cmd) {
 				if val == "" {
 					m.sizeValue = 100
 				} else {
-					m.sizeValue, _ = strconv.Atoi(val)
+					parsedSize, err := strconv.Atoi(val)
+					if err != nil {
+						m.sizeValue = 100
+					} else {
+						m.sizeValue = parsedSize
+					}
 				}
 				if m.sizeValue < 1 {
 					m.sizeValue = 1
@@ -217,37 +228,46 @@ func (m *CompressorModel) Update(msg tea.Msg) (*CompressorModel, tea.Cmd) {
 				m.step = CompressStepSelectMethod
 				m.sizeInput.Blur()
 				return m, nil
-			
+
 			case "k", "K":
 				if m.sizeInput.Value() != "" {
-					m.sizeValue, _ = strconv.Atoi(m.sizeInput.Value())
-					m.sizeUnit = "KB"
-					m.targetBytes = int64(m.sizeValue) * 1024
-					m.step = CompressStepConfirm
-					m.sizeInput.Blur()
+					parsedSize, err := strconv.Atoi(m.sizeInput.Value())
+					if err == nil {
+						m.sizeValue = parsedSize
+						m.sizeUnit = "KB"
+						m.targetBytes = int64(m.sizeValue) * 1024
+						m.step = CompressStepConfirm
+						m.sizeInput.Blur()
+					}
 					return m, nil
 				}
 			case "m", "M":
 				if m.sizeInput.Value() != "" {
-					m.sizeValue, _ = strconv.Atoi(m.sizeInput.Value())
-					m.sizeUnit = "MB"
-					m.targetBytes = int64(m.sizeValue) * 1024 * 1024
-					m.step = CompressStepConfirm
-					m.sizeInput.Blur()
+					parsedSize, err := strconv.Atoi(m.sizeInput.Value())
+					if err == nil {
+						m.sizeValue = parsedSize
+						m.sizeUnit = "MB"
+						m.targetBytes = int64(m.sizeValue) * 1024 * 1024
+						m.step = CompressStepConfirm
+						m.sizeInput.Blur()
+					}
 					return m, nil
 				}
 			case "b", "B":
 				if m.sizeInput.Value() != "" {
-					m.sizeValue, _ = strconv.Atoi(m.sizeInput.Value())
-					m.sizeUnit = "B"
-					m.targetBytes = int64(m.sizeValue)
-					m.step = CompressStepConfirm
-					m.sizeInput.Blur()
+					parsedSize, err := strconv.Atoi(m.sizeInput.Value())
+					if err == nil {
+						m.sizeValue = parsedSize
+						m.sizeUnit = "B"
+						m.targetBytes = int64(m.sizeValue)
+						m.step = CompressStepConfirm
+						m.sizeInput.Blur()
+					}
 					return m, nil
 				}
 			}
 		}
-		
+
 		// Check if unit input is focused
 		if m.unitInput.Focused() {
 			switch msg := msg.(type) {
@@ -259,7 +279,7 @@ func (m *CompressorModel) Update(msg tea.Msg) (*CompressorModel, tea.Cmd) {
 						unit = "KB"
 					}
 					m.sizeUnit = unit
-					
+
 					switch m.sizeUnit {
 					case "MB":
 						m.targetBytes = int64(m.sizeValue) * 1024 * 1024
@@ -280,7 +300,7 @@ func (m *CompressorModel) Update(msg tea.Msg) (*CompressorModel, tea.Cmd) {
 			m.unitInput, cmd = m.unitInput.Update(msg)
 			return m, cmd
 		}
-		
+
 		m.sizeInput, cmd = m.sizeInput.Update(msg)
 		return m, cmd
 
@@ -347,13 +367,13 @@ func (m *CompressorModel) buildOutputPath() {
 	dir := filepath.Dir(m.inputFile)
 	base := strings.TrimSuffix(filepath.Base(m.inputFile), filepath.Ext(m.inputFile))
 	ext := filepath.Ext(m.inputFile)
-	
+
 	// For compression, we output as JPG for images (better compression)
 	// Keep PDF as PDF
 	if strings.ToLower(ext) != ".pdf" {
 		ext = ".jpg"
 	}
-	
+
 	m.outputFile = filepath.Join(dir, base+"_comp"+ext)
 }
 
@@ -366,14 +386,18 @@ type compressResultMsg struct {
 
 // runCompression executes the ImageMagick command
 func (m *CompressorModel) runCompression() tea.Msg {
-	// Use jpeg:extent for target size compression
-	targetSize := fmt.Sprintf("%d", m.targetBytes)
-	
-	cmd := exec.Command("magick",
-		m.inputFile,
-		"-define", fmt.Sprintf("jpeg:extent=%s", targetSize),
-		m.outputFile,
-	)
+	// Build ImageMagick arguments based on output format
+	ext := strings.ToLower(filepath.Ext(m.outputFile))
+	args := []string{m.inputFile}
+
+	// Use jpeg:extent for target size compression when output is JPEG
+	if ext == ".jpg" || ext == ".jpeg" {
+		targetSize := fmt.Sprintf("%d", m.targetBytes)
+		args = append(args, "-define", fmt.Sprintf("jpeg:extent=%s", targetSize))
+	}
+	args = append(args, m.outputFile)
+
+	cmd := exec.Command("magick", args...)
 
 	output, err := cmd.CombinedOutput()
 	if err != nil {
@@ -390,8 +414,11 @@ func (m *CompressorModel) runCompression() tea.Msg {
 	}
 
 	// Check if we achieved target
-	reduction := float64(m.inputSize-outputSize) / float64(m.inputSize) * 100
-	
+	reduction := 0.0
+	if m.inputSize > 0 {
+		reduction = float64(m.inputSize-outputSize) / float64(m.inputSize) * 100
+	}
+
 	msg := fmt.Sprintf("Compressed successfully! Reduced by %.1f%%", reduction)
 	if outputSize > m.targetBytes {
 		msg = fmt.Sprintf("Compressed, but couldn't reach target. Best possible: %s", formatSize(outputSize))
@@ -421,7 +448,7 @@ func (m *CompressorModel) View() string {
 	case CompressStepSelectMethod:
 		b.WriteString(inputLabelStyle.Render("Select compression method:"))
 		b.WriteString("\n\n")
-		
+
 		b.WriteString(descriptionStyle.Render(fmt.Sprintf("Input file: %s (%s)", filepath.Base(m.inputFile), formatSize(m.inputSize))))
 		b.WriteString("\n\n")
 
@@ -434,7 +461,7 @@ func (m *CompressorModel) View() string {
 			}
 			b.WriteString(style.Render(cursor + method))
 			b.WriteString("\n")
-			
+
 			// Description for selected
 			if i == m.methodCursor {
 				desc := ""
@@ -455,7 +482,7 @@ func (m *CompressorModel) View() string {
 		b.WriteString("\n\n")
 		b.WriteString(m.percentInput.View())
 		b.WriteString("\n\n")
-		
+
 		// Show preview
 		preview := m.inputSize * int64(config.DefaultCompressPercent) / 100
 		if m.percentInput.Value() != "" {
@@ -471,7 +498,7 @@ func (m *CompressorModel) View() string {
 	case CompressStepSetFixedSize:
 		b.WriteString(inputLabelStyle.Render("Target file size:"))
 		b.WriteString("\n\n")
-		
+
 		if m.unitInput.Focused() {
 			b.WriteString(fmt.Sprintf("Size: %d ", m.sizeValue))
 			b.WriteString(m.unitInput.View())
@@ -505,12 +532,12 @@ func (m *CompressorModel) View() string {
 		)
 		b.WriteString(summaryBox)
 		b.WriteString("\n\n")
-		
+
 		if strings.ToLower(filepath.Ext(m.inputFile)) == ".pdf" {
 			b.WriteString(warningStyle.Render("⚠️  PDF compression may rasterize content"))
 			b.WriteString("\n\n")
 		}
-		
+
 		b.WriteString(warningStyle.Render("Proceed with compression? (Y/n)"))
 		b.WriteString("\n\n")
 		b.WriteString(helpStyle.Render("Y/Enter Proceed • N/Esc Back • B Menu"))
