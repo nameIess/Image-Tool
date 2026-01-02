@@ -2,11 +2,15 @@ package config
 
 // Default configuration values
 const (
-	DefaultOutputFormat   = "png"
-	DefaultDensity        = 180
-	DefaultQuality        = 90
-	DefaultPrefix         = "Page-"
+	DefaultOutputFormat    = "png"
+	DefaultDensity         = 180
+	DefaultQuality         = 90
+	DefaultPrefix          = "Page-"
 	DefaultCompressPercent = 75
+
+	// Density limits for PDF conversion
+	MinDensity = 72
+	MaxDensity = 600
 )
 
 // SupportedImageFormats lists all formats for image conversion

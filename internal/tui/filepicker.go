@@ -44,9 +44,6 @@ type FilePickerModel struct {
 	// For manual path input
 	showInput bool
 	pathInput textinput.Model
-
-	// Callback
-	onSelect func(string)
 }
 
 // NewFilePickerModel creates a new file picker
@@ -76,8 +73,12 @@ func getExecutableDir() string {
 		return filepath.Dir(execPath)
 	}
 	// Fallback to working directory
-	cwd, _ := os.Getwd()
-	return cwd
+	cwd, err := os.Getwd()
+	if err == nil && cwd != "" {
+		return cwd
+	}
+	// As a final fallback, use the current directory explicitly
+	return "."
 }
 
 // SetMode sets what files to display
