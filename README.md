@@ -1,273 +1,279 @@
-# Image Converter Suite (Batch)
+# ImageTool
 
-A Windows batch script powered by ImageMagick that lets you:
-
-- Convert PDFs to images, and
-- Convert images to a different format (e.g., PNG, JPG, AVIF, WEBP, TIFF, BMP).
-
-Interactive prompts, sensible defaults, and a simple main menu make it fast to use.
+ImageTool is a cross-platform terminal application for converting PDF files to images, converting between image formats, and compressing images or PDFs—all with an intuitive, interactive text user interface. Built in Go using the Bubble Tea TUI framework, it streamlines batch image processing and PDF conversion for developers, designers, and power users.
 
 ## Features
 
-- ✅ **Main Menu with Defaults**: Choose operation by number; pressing Enter selects the default Option
-- ✅ **Interactive Prompts**: All settings support defaults; just press Enter to accept
-- ✅ **Local File Detection**:
-  - PDFs in script folder are listed for quick selection (PDF flow)
-  - Images in script folder are listed for quick selection (Image conversion flow)
-- ✅ **Per‑PDF Output Folders**: PDF conversions save into `<PDF name>_image` (e.g., `Report_image`)
-- ✅ **Auto‑open Output (PDF only)**: After a successful PDF conversion, the output folder opens in Explorer
-- ✅ **Image Format Conversion**: Convert any supported image to another format
-  - Options: `jpeg`, `jpg`, or `custom` (enter `avif`, `webp`, `tiff`, `bmp`, etc.)
-  - Output file name: `<original_name>_conv.<format>`
-  - Shows converted file size in bytes/KB/MB
-  - Does NOT auto‑open the folder
-    -- ✅ **Compression**: Compress images or PDFs to a target file size percentage or a fixed file size
-  - Target a specific percentage of the original file size (e.g., 50%)
-  - Or, compress images to a fixed file size (e.g., 20KB, 1MB)
-  - Supports both Images and PDFs for percentage; fixed size for images only
-  - Output file name: `<original_name>_comp.<ext>`
-- ✅ **Quoted/Absolute Path Support**: Paste full paths with or without quotes; the script Normalizes them
-- ✅ **Multiple Format Support**:
-  - PDF export to: PNG, JPG, JPEG, BMP, TIFF, GIF
-  - Image conversion to: any format supported by your ImageMagick build
-- ✅ **Customizable Settings (PDF)**: Adjustable output quality (1-100) and density (DPI)
-- ✅ **Input Validation**: Clear errors and helpful guidance
-- ✅ **Multi‑page PDFs**: Custom filename prefixes for page outputs
-- ✅ **Smart Fallback**: If folder creation fails, saves in current directory
+- **PDF to Image Converter** - Convert PDF pages to images (PNG, JPG, BMP, TIFF, GIF)
+- **Image Format Converter** - Convert between image formats (PNG, JPG, WebP, AVIF, BMP, TIFF, GIF)
+- **Image/PDF Compressor** - Reduce file size by percentage or target size
+- **Interactive TUI** - Beautiful terminal interface with keyboard navigation
+- **Built-in File Picker** - Browse and select files without leaving the app
 
-## Installation Instructions
+## Screenshots
 
-### Prerequisites
+```
+┌─────────────────────────────────────────────────────────────┐
+│                      ImageTool v1.0                         │
+├─────────────────────────────────────────────────────────────┤
+│                                                             │
+│   [PDF]  PDF to Image Converter                             │
+│          Convert PDF pages to images (PNG, JPG, etc.)       │
+│                                                             │
+│   [IMG]  Convert Image Format                               │
+│          Convert images between formats (WebP, AVIF, etc.)  │
+│                                                             │
+│   [ZIP]  Compress Image/PDF                                 │
+│          Reduce file size by percentage or target size      │
+│                                                             │
+│   [X]    Exit                                               │
+│          Quit the application                               │
+│                                                             │
+├─────────────────────────────────────────────────────────────┤
+│  Up/k up | Down/j down | enter select | q quit              │
+└─────────────────────────────────────────────────────────────┘
+```
 
-1. **Install ImageMagick:**
+## Prerequisites
 
-   - Visit: [ImageMagick](https://imagemagick.org/script/download.php)
-   - Download the Windows version (choose x64 or x86 based on your system)
-   - Run the installer as Administrator
-   - ✅ **Important**: Check "Add application directory to your system path"
+Before using ImageTool, install the following dependencies:
 
-2. **Install Ghostscript (Required for PDF handling):**
+### 1. ImageMagick (Required)
 
-   - Visit: [Ghostscript](https://www.ghostscript.com/releases/gsdnld.html)
-   - Download and install the appropriate version for your system
+ImageMagick is used for all image processing operations.
 
-3. **Clone or Download the Repository:**
+**Windows:**
 
-   ```cmd
-   git clone https://github.com/nameIess/Image-Tool.git
-   cd Image-Tool
-   ```
+- Download from [ImageMagick Downloads](https://imagemagick.org/script/download.php)
+- Run the installer and check **"Add application directory to your system path"**
 
-   Download: [Image-Tool](https://github.com/nameIess/Image-Tool/archive/refs/heads/master.zip)
+**macOS:**
 
-4. **Verify Installation:**
-   ```cmd
-   magick -version
-   gswin64c --version
-   ```
-   Both commands should display version information if installed correctly.
+```bash
+brew install imagemagick
+```
+
+**Linux (Ubuntu/Debian):**
+
+```bash
+sudo apt install imagemagick
+```
+
+### 2. Ghostscript (Required for PDF operations)
+
+Ghostscript enables PDF to image conversion.
+
+**Windows:**
+
+- Download from [Ghostscript Downloads](https://www.ghostscript.com/releases/gsdnld.html)
+- Install the appropriate version for your system
+
+**macOS:**
+
+```bash
+brew install ghostscript
+```
+
+**Linux (Ubuntu/Debian):**
+
+```bash
+sudo apt install ghostscript
+```
+
+### 3. Verify Installation
+
+```bash
+magick -version
+gs --version  # or gswin64c --version on Windows
+```
+
+## Installation
+
+### Option 1: Download Pre-built Binary
+
+Download the latest release from the [Releases](https://github.com/nameIess/Image-Tool/releases) page.
+
+### Option 2: Build from Source
+
+**Requirements:** Go 1.21 or higher
+
+```bash
+# Clone the repository
+git clone https://github.com/nameIess/Image-Tool.git
+cd Image-Tool
+
+# Download dependencies
+go mod download
+
+# Build the executable
+go build -o Image-Tool.exe ./cmd/imagetool
+
+# Or build with a custom name
+go build -o <custom_name>.exe ./cmd/imagetool
+```
+
+**[⬇️ Download ZIP](https://github.com/nameIess/Image-Tool/archive/refs/heads/master.zip)**
+
+**Cross-compilation examples:**
+
+```bash
+# Windows (64-bit)
+GOOS=windows GOARCH=amd64 go build -o Image-Tool-windows-amd64.exe ./cmd/imagetool
+
+# macOS (Apple Silicon)
+GOOS=darwin GOARCH=arm64 go build -o Image-Tool-darwin-arm64 ./cmd/imagetool
+
+# Linux (64-bit)
+GOOS=linux GOARCH=amd64 go build -o Image-Tool-linux-amd64 ./cmd/imagetool
+```
+
+### Option 3: Install with Go
+
+```bash
+go install github.com/nameIess/Image-Tool/cmd/imagetool@latest
+```
+
+## Usage
+
+### Run the Application
+
+```bash
+# Windows
+Image-Tool.exe
+
+# macOS/Linux
+./Image-Tool
+```
+
+### Keyboard Navigation
+
+| Key                 | Action                                |
+| ------------------- | ------------------------------------- |
+| `Up` / `k`          | Move up                               |
+| `Down` / `j`        | Move down                             |
+| `Enter`             | Select / Confirm                      |
+| `Esc` / `Backspace` | Go back                               |
+| `q` / `Ctrl+C`      | Quit                                  |
+| `o`                 | Open output folder (after conversion) |
+
+## Features in Detail
+
+### PDF to Image Converter
+
+Convert multi-page PDFs to individual image files.
+
+**Settings:**
+
+- **Output Format:** PNG, JPG, JPEG, BMP, TIFF, GIF
+- **Density (DPI):** Resolution quality (default: 180)
+- **Quality:** Compression level 1-100 (default: 90)
+- **Prefix:** Filename prefix for pages (default: `Page-`)
+
+**Output:** Files are saved to `<PDF_name>_image/` folder
+
+### Image Format Converter
+
+Convert images between different formats.
+
+**Supported Formats:** PNG, JPG, JPEG, WebP, AVIF, BMP, TIFF, GIF
+
+**Output:** `<original_name>_conv.<new_format>`
+
+### Image/PDF Compressor
+
+Reduce file size using two methods:
+
+1. **Percentage:** Target a percentage of original size (e.g., 50%)
+2. **Fixed Size:** Target a specific file size (e.g., 500KB, 2MB)
+
+**Output:** `<original_name>_comp.<ext>`
 
 ## Project Structure
 
 ```
-Image-Tool/
-├── Convert.bat          # Main conversion script
-└── README.md            # This documentation file
+imagetool/
+├── cmd/
+│   └── imagetool/
+│       ├── main.go              # Application entry point
+│       └── versioninfo.json     # Windows version info
+├── internal/
+│   ├── config/
+│   │   └── config.go            # Configuration and defaults
+│   └── tui/
+│       ├── app.go               # Main TUI application
+│       ├── filepicker.go        # File browser component
+│       ├── pdf_converter.go     # PDF to image converter
+│       ├── format_converter.go  # Image format converter
+│       ├── compressor.go        # File compressor
+│       ├── styles.go            # UI styles and themes
+│       └── utils.go             # Utility functions
+├── go.mod
+├── go.sum
+├── LICENSE
+└── README.md
 ```
 
-## Usage Instructions
+## Development
 
-### Start
+### Building with Version Info (Windows)
 
-Run the script and pick an operation from the main menu (Enter defaults to 1):
+To embed version information in the Windows executable:
 
-```
-=========================================================
-*              Image Converter Suite                    *
-*                Using ImageMagick                      *
-=========================================================
+```bash
+# Install goversioninfo
+go install github.com/josephspurrier/goversioninfo/cmd/goversioninfo@latest
 
-Select an operation:
-  1. PDF to Image Converter
-  2. Convert Image Format
-  3. Compress Image/PDF to Target Size
-  0. Exit
+# Generate resource file
+cd cmd/imagetool
+goversioninfo -o resource.syso versioninfo.json
 
-Enter your choice (default: 1):
+# Build with embedded version info
+cd ../..
+go build -o Image-Tool.exe ./cmd/imagetool
 ```
 
-### PDF to Image
+### Running Tests
 
-1. Optional: Pick a local PDF (auto‑detected):
-
-   - If there are any `*.pdf` files in the same folder as `Convert.bat`, the script will list them like:
-
-     ```
-     -- Local PDF detection --
-     Found 2 PDF(s) in script directory:
-     1. Example1.pdf
-     2. Example2.pdf
-
-     Select a PDF to use (1-2) or press Enter to skip: 1
-     Selected: F:\\Code\\Image-Tool\\Example1.pdf
-     Using selected PDF: F:\\Code\\Image-Tool\\Example1.pdf
-     ```
-
-   - Enter a number to select and continue. Press Enter to skip and type a filename manually.
-
-2. Follow the interactive prompts:
-
-   - **PDF filename**: Enter the full path or filename (e.g., `document.pdf`)
-   - **Output format**: Choose from png, jpg, jpeg, bmp, tiff, gif (default: png)
-   - **Density**: Set DPI value for image resolution (default: 180)
-   - **Quality**: Set compression quality 1-100 (default: 90)
-   - **Filename prefix**: Set prefix for output files (default: Page-)
-
-3. Review and confirm:
-   - Check the conversion summary
-   - Confirm to proceed with conversion
-
-#### Example (PDF to PNG)
-
-```
-=========================================================
-*                    PDF to Image Converter             *
-*                      Using ImageMagick                *
-=========================================================
-
--- Local PDF detection --
-Found 1 PDF(s) in script directory:
-1. Example.pdf
-
-Select a PDF to use (1-1) or press Enter to skip: 1
-Selected: F:\Code\Image-Tool\Example.pdf
-Using selected PDF: F:\Code\Image-Tool\Example.pdf
-
--- Input Parameters --
-
-Enter output image format (default: png): png
-Enter density value (default: 180): 300
-Enter quality value 1-100 (default: 90): 95
-Enter output filename prefix (default: Page-): Doc-
-
-..*..Conversion Summary..*..
-
-Input PDF:      F:\Code\Image-Tool\Example.pdf
-Output format:  .png
-Density:        300
-Quality:        95
-Prefix:         Doc-
-Output folder:  Example_image\
-Command:        magick -density 300 "F:\\Code\\Image-Tool\\Example.pdf" -quality 95 "Example_image\Doc-%d.png"
-
-Proceed with conversion? (y/N): y
+```bash
+go test ./...
 ```
 
-Result: Creates `Example_image/Doc-0.png`, `Example_image/Doc-1.png`, etc., then opens that folder automatically.
+### Code Formatting
 
-### Convert Image Format
+```bash
+go fmt ./...
+```
 
-Convert any supported image to another format. Output naming: `<original_name>_conv.<format>`.
+## Troubleshooting
 
-1. Optional: Pick a local image (auto‑detected in the script folder), or press Enter and paste a path.
-2. Choose output format:
-   - 1. `jpeg`
-   - 2. `jpg`
-   - 3. `custom` → type anything supported (e.g., `avif`, `webp`, `tiff`, `bmp`)
-3. Conversion runs and shows the resulting file size in bytes, KB, and MB.
+### "magick: command not found"
 
-Notes:
+ImageMagick is not installed or not in your PATH.
 
-- The image conversion flow does NOT auto‑open Explorer.
-- Size display helps decide next actions (like manual compression outside the script).
+- **Windows:** Reinstall and check "Add to PATH"
+- **macOS/Linux:** Ensure `/usr/local/bin` is in your PATH
 
-### Compress Image/PDF
+### "gs: command not found" (PDF conversion fails)
 
-Reduce the file size of an image or PDF by targeting a percentage of the original size, or compress images to a fixed file size.
+Ghostscript is not installed.
 
-1. Select "Compress Image/PDF to Target Size" from the main menu.
-2. Optional: Pick a local file (auto‑detected), or press Enter and paste a path.
-3. Choose compression mode:
-   - **By percentage**: Enter target percentage (1-100). Example: `50` will attempt to compress the file to 50% of its original size.
-   - **To fixed file size (images only)**: Enter target value (e.g., `20`) and unit (`KB`, `MB`, or `B`). Example: `20 KB` will attempt to compress the image to 20KB.
-4. The script calculates the target size and shows a summary.
-5. Compression runs using ImageMagick's `extent` feature (for JPEG) or general compression.
-   - Output file: `<original_name>_comp.<ext>`
-   - Note: PDF compression may rasterize content. Fixed size compression is not supported for PDFs.
+- Install Ghostscript from the prerequisites section
 
-## Notes and Troubleshooting
+### Conversion produces blank images
 
-### Important Notes
+- Increase the **density** (DPI) value
+- Ensure the PDF is not password-protected
 
-- 📁 **Output Location (PDF)**: Converted images are saved in a per‑PDF folder named `<PDF name>_image` in the current working directory. If folder creation fails, output falls back to the current directory.
-- �️ **Output Location (Image Conversion)**: Converted images are written next to the source image (same folder) with `_conv` in the filename.
-- �🗂️ **Local File Detection**: At startup, the script can list local PDFs (PDF flow) or local images (image conversion flow). To use files in a different folder, enter their full paths.
-- 🔄 **Automatic Folder Creation**: The script creates the per‑PDF output folder if it doesn't exist
-- 📋 **Multi-page Support**: Each page of the PDF becomes a separate image file
-- 🔢 **File Naming**: Output files use the format: `[prefix][page-number].[format]`
-- ⚡ **Performance**: Higher density values create larger, higher-quality images but take more time
+## Dependencies
 
-### Common Issues & Solutions
+- [Bubble Tea](https://github.com/charmbracelet/bubbletea) - TUI framework
+- [Bubbles](https://github.com/charmbracelet/bubbles) - TUI components
+- [Lip Gloss](https://github.com/charmbracelet/lipgloss) - Style definitions
 
-1. **"ImageMagick is not installed or not in PATH!"**
+## License
 
-   - ✅ **Solution**: Install ImageMagick and ensure it's added to system PATH
-   - ✅ **Verify**: Run `magick -version` in command prompt
+This project is licensed under the MIT License - see the [LICENSE](LICENSE) file for details.
 
-2. **"Failed to create PDF_Images folder"**
+## Contributing
 
-   - ✅ **Cause**: Insufficient permissions or OneDrive sync issues
-   - ✅ **Solution**: Run as Administrator or choose to continue (saves to current directory)
-
-3. **"File does not exist!"**
-
-   - ✅ **Solution**: Check filename spelling and file location
-   - ✅ **Tip**: Use full file path if PDF is in different directory
-
-4. **"Conversion failed!"**
-
-   - ✅ **Common causes**:
-     - PDF is password protected
-     - PDF file is corrupted
-     - Insufficient disk space
-     - Missing Ghostscript installation
-   - ✅ **Solution**: Install Ghostscript and verify PDF file integrity
-
-5. **Poor output quality or large file sizes**
-   - ✅ **For better quality**: Increase density (e.g., 300+ DPI)
-   - ✅ **For smaller files**: Decrease quality (70-80) or density (72-150)
-
-### Performance Tips
-
-- **Large PDFs**: Use density 72-150 for faster processing
-- **Print Quality**: Use density 300+ and quality 90-100
-- **Web Use**: Use density 72-96 and quality 70-85
-- **Disk Space**: Monitor available space for high-density conversions
-
-### System Requirements
-
-- **OS**: Windows 7 or later
-- **ImageMagick**: Version 7.0 or later
-- **Ghostscript**: Latest version recommended
-- **Disk Space**: Varies based on PDF size and output settings
-
-## Support
-
-If you encounter any issues:
-
-1. Verify ImageMagick installation
-2. Ensure PDF file is not corrupted or password-protected
-
-## Version History
-
-- **v1.5** - Added fixed file size compression for images: compress images to a user-specified size (e.g., 20KB, 1MB).
-- **v1.4** - Added Compression feature: compress images and PDFs to a target percentage of the original file size.
-- **v1.3** - Introduced main menu; added Image Format Conversion (jpeg/jpg/custom); shows converted image file size; PDF conversions auto‑open folder; image conversions do not.
-- **v1.2** - Per‑PDF output folders (`<name>_images`), automatic opening of the output folder after success, improved robust handling of quoted/absolute input paths, and a single final exit instead of multiple pauses.
-- **v1.1** - Added local PDF detection and selection at startup; selected file is used automatically for conversion (no auto-open).
-- **v1.0** - Initial release with basic PDF to image conversion functionality.
-
-## Roadmap
-
-- Advanced Compression options (Presets, Lossless mode)
-- Batch processing for multiple files at once
+Contributions are welcome! Please feel free to submit a Pull Request.
