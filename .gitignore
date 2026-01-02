@@ -1,85 +1,105 @@
-# PDF to Image Converter - Git Ignore File
-# ==========================================
+# ImageTool - Git Ignore File
+# ============================
+# Go-based Image Converter Suite using Bubble Tea TUI
+# Converts PDFs to images, image format conversion, and compression
 
-# Output Directories (Primary Requirement)
-# -----------------------------------------
+# ===================
+# Go Build Artifacts
+# ===================
+# Compiled binaries
+*.exe
+*.exe~
+*.dll
+*.so
+*.dylib
+
+# Test binaries
+*.test
+
+# Output of go coverage tool
+*.out
+*.coverprofile
+coverage.html
+
+# Go workspace file
+go.work
+go.work.sum
+
+# Dependency directories
+vendor/
+
+# ===================
+# Build & Distribution
+# ===================
+dist/
+build/
+release/
+bin/
+
+# Windows resource files (generated from versioninfo.json)
+# Regenerate with: goversioninfo -o resource.syso versioninfo.json
+*.syso
+
+# ===================
+# Log Files & Directories
+# ===================
+log/
+logs/
+*.log
+conversion.log
+error.log
+debug.log
+
+# ===================
+# Output Directories
+# ===================
+# PDF conversion output folders (pattern: <filename>_image/)
+*_image/
 PDF_Images/
 
-# Temporary Files
-# ---------------
-*.log
-*.tmp
-*.temp
-~$*
-*.swp
-*.swo
-
-# System Files
-# ------------
-Thumbs.db
-.DS_Store
-Thumbs.db:encryptable
-ehthumbs.db
-ehthumbs_vista.db
-*.stackdump
-[Dd]esktop.ini
-$RECYCLE.BIN/
-.DS_Store?
-._*
-.Spotlight-V100
-.Trashes
-Icon?
-
-# IDE and Editor Settings
-# -----------------------
+# ===================
+# IDE & Editor Settings
+# ===================
+# VS Code
 .vscode/
+*.code-workspace
+
+# JetBrains (GoLand, IntelliJ)
 .idea/
+
+# Visual Studio
 .vs/
 *.suo
 *.user
 *.userosscache
 *.sln.docstates
 
-# Generated Image Files (Optional - keep converted images out of repo)
-# -------------------------------------------------------------------
-*.png
-*.jpg
-*.jpeg
-*.bmp
-*.tiff
-*.gif
-*.webp
-
-# Common PDF Files (Optional - exclude large PDFs from repo)
-# ----------------------------------------------------------
-*.pdf
-!sample.pdf
-!test.pdf
-!example.pdf
-
-# Additional Temporary and Cache Files
-# ------------------------------------
-*.bak
-*.backup
+# Vim/Neovim
+*.swp
+*.swo
+*.swn
 *~
-*.orig
-*.cache
 
-# Build and Distribution
-# ----------------------
-dist/
-build/
-release/
+# Emacs
+*~
+\#*\#
+.#*
 
-# Log Files (Extended)
-# -------------------
-conversion.log
-error.log
-debug.log
-*.txt
+# Sublime Text
+*.sublime-workspace
+*.sublime-project
 
-# Windows Specific
-# ----------------
+# ===================
+# OS Generated Files
+# ===================
+# Windows
+Thumbs.db
+Thumbs.db:encryptable
+ehthumbs.db
+ehthumbs_vista.db
+*.stackdump
+[Dd]esktop.ini
+$RECYCLE.BIN/
 *.cab
 *.msi
 *.msix
@@ -87,8 +107,156 @@ debug.log
 *.msp
 *.lnk
 
-# Configuration Files (Keep templates, ignore local configs)
-# ----------------------------------------------------------
-config.local.bat
-settings.local.ini
+# macOS
+.DS_Store
+.DS_Store?
+._*
+.Spotlight-V100
+.Trashes
+Icon?
+.AppleDouble
+.LSOverride
+
+# Linux
+*~
+
+# ===================
+# Temporary Files
+# ===================
+*.tmp
+*.temp
+*.bak
+*.backup
+*.orig
+*.cache
+~$*
+
+# ===================
+# Local Configuration
+# ===================
+config.local.*
+settings.local.*
 *.config.user
+.env
+.env.local
+.env.*.local
+
+# ===================
+# Generated Media Files (Optional)
+# ===================
+# Uncomment these if you don't want converted images in the repo
+# *.png
+# *.jpg
+# *.jpeg
+# *.bmp
+# *.tiff
+# *.tif
+# *.gif
+# *.webp
+# *.avif
+
+# Uncomment to exclude PDF files
+# *.pdf
+
+# ===================
+# Go Specific
+# ===================
+# Go debug binaries
+__debug_bin*
+debug
+debug.exe
+
+# Delve debugger
+__debug_bin
+
+# Go profiling
+*.pprof
+*.prof
+cpu.out
+mem.out
+trace.out
+
+# Go build cache (usually in user home, but just in case)
+.cache/
+
+# ===================
+# Testing & Benchmarks
+# ===================
+testdata/output/
+benchmark_results/
+*.bench
+
+# ===================
+# Documentation Generated
+# ===================
+docs/_build/
+site/
+godoc/
+
+# ===================
+# CI/CD Artifacts
+# ===================
+.github/workflows/*.local.*
+coverage/
+reports/
+junit.xml
+test-results/
+
+# ===================
+# Security & Secrets
+# ===================
+*.pem
+*.key
+*.crt
+*.p12
+*.pfx
+secrets/
+credentials/
+.secrets
+
+# ===================
+# Package Manager Locks (if using other tools)
+# ===================
+# Note: go.sum SHOULD be committed for Go modules
+package-lock.json
+yarn.lock
+pnpm-lock.yaml
+
+# ===================
+# Compressed/Archive Files
+# ===================
+*.zip
+*.tar
+*.tar.gz
+*.tgz
+*.rar
+*.7z
+
+# ===================
+# Database Files
+# ===================
+*.db
+*.sqlite
+*.sqlite3
+
+# ===================
+# Misc Generated Files
+# ===================
+*.generated.go
+*_gen.go
+*.pb.go
+mock_*.go
+mocks/
+
+# Crash dumps
+crash.log
+hs_err_pid*
+
+# NPM (if any frontend tooling)
+node_modules/
+
+# Python (if any scripting)
+__pycache__/
+*.py[cod]
+venv/
+.venv/
