@@ -2,28 +2,37 @@
 title Image Converter Suite
 setlocal enabledelayedexpansion
 
-:: Image Converter Suite using ImageMagick
-:: ========================================
+:: =========================================================
+:: Configuration
+:: =========================================================
+set "HEADER_BORDER========================================================="
+set "HDR_MAIN_LINE1=*              Image Converter Suite                    *"
+set "HDR_MAIN_LINE2=*                Using ImageMagick                      *"
+set "HDR_PDF_LINE1=*                 PDF to Image Converter                *"
+set "HDR_PDF_LINE2=*                   Using ImageMagick                   *"
+set "HDR_FORMAT_LINE1=*              Convert Image Format                     *"
+set "HDR_COMP_LINE1=*          Compress Image/PDF to Target Size            *"
 
-:: -----------------------------------------------------------------
-:: Centralized Defaults (edit here to change script default values)
-:: -----------------------------------------------------------------
 set "DEF_OUTPUT_FORMAT=png"
 set "DEF_DENSITY=180"
 set "DEF_QUALITY=90"
 set "DEF_PREFIX=Page-"
 set "DEF_CONVERT_FORMAT=png"
 set "DEF_COMPRESS_PERCENT=75"
-:: -----------------------------------------------------------------
+
+set "AVAILABLE_FORMATS=png, jpg, jpeg, bmp, tiff, gif"
+
+set "PATTERN_PDF=*.pdf"
+set "PATTERN_IMAGES=*.jpg *.jpeg *.png *.bmp *.gif *.tiff *.tif *.webp *.avif"
+set "PATTERN_COMPRESS=*.jpg *.jpeg *.png *.bmp *.gif *.tiff *.tif *.webp *.avif *.pdf"
+
+set "SCRIPT_DIR=%~dp0"
+set "MAGICK_AVAILABLE=0"
+
+goto main_menu
 
 :main_menu
-cls
-echo.
-echo =========================================================
-echo *              Image Converter Suite                    *        
-echo *                Using ImageMagick                      *        
-echo =========================================================
-echo.
+call :print_header "%HDR_MAIN_LINE1%" "%HDR_MAIN_LINE2%"
 echo Select an operation:
 echo.
 echo   1. PDF to Image Converter
@@ -31,202 +40,79 @@ echo   2. Convert Image Format
 echo   3. Compress Image/PDF to Target Size
 echo   0. Exit
 echo.
+set "menu_choice="
 set /p menu_choice="Enter your choice (default: 1): "
 if "%menu_choice%"=="" set "menu_choice=1"
 
-if "%menu_choice%"=="0" goto exit_script
-if "%menu_choice%"=="1" goto pdf_converter
-if "%menu_choice%"=="2" goto image_format_converter
-if "%menu_choice%"=="3" goto compress_image
-
+if "%menu_choice%"=="0" goto final_exit
+if "%menu_choice%"=="1" (
+    call :feature_pdf_to_image
+    goto main_menu
+)
+if "%menu_choice%"=="2" (
+    call :feature_convert_format
+    goto main_menu
+)
+if "%menu_choice%"=="3" (
+    call :feature_compress_file
+    goto main_menu
+)
 
 echo [ERROR] Invalid choice!
 timeout /t 2 >nul
 goto main_menu
 
-:exit_script
-echo.
-echo Exiting... Goodbye!
-timeout /t 1 >nul
-exit /b 0
+:feature_pdf_to_image
+call :print_header "%HDR_PDF_LINE1%" "%HDR_PDF_LINE2%"
+call :ensure_magick
+if errorlevel 1 exit /b 0
 
-:pdf_converter
-cls
-echo.
-echo =========================================================
-echo *                 PDF to Image Converter                *        
-echo *                   Using ImageMagick                   *        
-echo =========================================================
-echo.
-
-:: Check if ImageMagick is available
-where magick >nul 2>nul
-if %errorlevel% neq 0 (
-    echo [ERROR] ImageMagick is not installed or not in PATH!
-    echo Please install ImageMagick from: https://imagemagick.org/script/download.php
-    echo.
-    pause
-    exit /b 1
-)
-
-:: Check for PDF files in the script directory and offer to open one
-echo.
 echo -- Local PDF detection --
 echo.
-set "script_dir=%~dp0"
-set "found=0"
-pushd "%script_dir%" >nul 2>&1
-for %%F in (*.pdf) do (
-    set /a found+=1
-    set "pdf!found!=%%F"
-)
-popd >nul 2>&1
+set "selected_pdf="
+call :select_file "PDF" selected_pdf %PATTERN_PDF%
+call :resolve_input_file "Enter PDF filepath (with extension): " "%selected_pdf%" input_pdf
 
-if %found% gtr 0 goto show_pdfs
-echo No PDF files found in script directory.
 echo.
-goto after_pdf_list
-
-:show_pdfs
-echo Found %found% PDF(s) in script directory:
-for /l %%i in (1,1,%found%) do echo %%i. !pdf%%i!
+echo Available formats: %AVAILABLE_FORMATS%
 echo.
-set /p sel="Select a PDF to use (1-%found%) or press Enter to skip: "
-if "%sel%"=="" goto after_pdf_list
-echo %sel%| findstr /r "^[0-9][0-9]*$" >nul || goto after_pdf_list
-if %sel% lss 1 goto after_pdf_list
-if %sel% gtr %found% goto after_pdf_list
-call set "file_to_open=%%pdf%sel%%%"
-set "input_pdf=%script_dir%!file_to_open!"
-echo Selected: %input_pdf%
-
-:after_pdf_list
-
-:input_section
-echo.
-echo -- Input Parameters --
-echo.
-
-:: Get input PDF filename
-:input_pdf
-:: If a PDF was selected above, reuse it and skip prompt
-if defined input_pdf (
-    echo Using selected PDF: %input_pdf%
-    goto validate_input_file
-)
-set /p input_pdf="Enter PDF filepath (with extension): "
-if "!input_pdf!"=="" (
-    echo [ERROR] Please enter a valid filename!
-    goto input_pdf
-)
-
-:: Sanitize: remove surrounding quotes if user pasted a quoted path
-set "input_pdf=%input_pdf:"=%"
-:: Normalize to full path (handles relative paths and spaces)
-for %%I in ("%input_pdf%") do set "input_pdf=%%~fI"
-
-:: Check if file exists
-:validate_input_file
-if not exist "%input_pdf%" (
-    echo [ERROR] File '%input_pdf%' does not exist!
-    echo.
-    goto input_pdf
-)
-
-:: Get output image format
-:output_format
-echo.
-echo Available formats: png, jpg, jpeg, bmp, tiff, gif
-echo.
+set "output_format="
 set /p output_format="Enter output image format (default: %DEF_OUTPUT_FORMAT%): "
 if "%output_format%"=="" set "output_format=%DEF_OUTPUT_FORMAT%"
+if not "%output_format:~0,1%"=="." set "output_format=.%output_format%"
 
-:: Validate format (add dot if not present)
-if not "!output_format:~0,1!"=="." set output_format=.!output_format!
+call :prompt_numeric "Enter density value (default: %DEF_DENSITY%): " "%DEF_DENSITY%" "" "" density
+call :prompt_numeric "Enter quality value 1-100 (default: %DEF_QUALITY%): " "%DEF_QUALITY%" "1" "100" quality
 
-:: Get density value
-:density_input
 echo.
-set /p density="Enter density value (default: %DEF_DENSITY%): "
-if "%density%"=="" set "density=%DEF_DENSITY%"
-
-:: Validate density is numeric
-echo %density%| findstr /r "^[0-9][0-9]*$" >nul
-if %errorlevel% neq 0 (
-    echo [ERROR] Please enter a valid numeric density value!
-    goto density_input
-)
-
-:: Get quality value
-:quality_input
-echo.
-set /p quality="Enter quality value 1-100 (default: %DEF_QUALITY%): "
-if "%quality%"=="" set "quality=%DEF_QUALITY%"
-
-:: Validate quality is numeric and in range
-echo %quality%| findstr /r "^[0-9][0-9]*$" >nul
-if %errorlevel% neq 0 (
-    echo [ERROR] Please enter a valid numeric quality value!
-    goto quality_input
-)
-
-if %quality% lss 1 (
-    echo [ERROR] Quality must be between 1 and 100!
-    goto quality_input
-)
-if %quality% gtr 100 (
-    echo [ERROR] Quality must be between 1 and 100!
-    goto quality_input
-)
-
-:: Get output filename prefix
-echo.
+set "prefix="
 set /p prefix="Enter output filename prefix (default: %DEF_PREFIX%): "
 if "%prefix%"=="" set "prefix=%DEF_PREFIX%"
 
-:: Derive output folder name from input PDF filename (without extension)
 for %%I in ("%input_pdf%") do set "pdf_base=%%~nI"
-set "output_folder=!pdf_base!_images"
-
-:: Check if output folder exists, create if not
-if not exist "!output_folder!" (
+set "output_folder=%pdf_base%_images"
+set "use_subfolder=true"
+call :ensure_directory "%output_folder%"
+if errorlevel 1 (
     echo.
-    echo [INFO] Creating output folder: "!output_folder!" ...
-    mkdir "!output_folder!" 2>nul
-    if exist "!output_folder!" (
-        echo [SUCCESS] Folder created: "!output_folder!"
-    ) else (
-        echo [ERROR] Failed to create output folder: "!output_folder!"!
-        echo [INFO] This might be due to permissions or disk space issues.
-        echo [INFO] Falling back to current directory for output files.
-        echo Current directory: %CD%
-        echo.
-        set /p continue_anyway="Continue with conversion anyway? Images will be saved in current directory (Y/N): "
-        if /i not "!continue_anyway!"=="Y" if /i not "!continue_anyway!"=="YES" (
-            echo Conversion cancelled.
-            pause
-            exit /b 1
-        )
-        set use_subfolder=false
+    echo [ERROR] Failed to create output folder: "%output_folder%"!
+    echo [INFO] Images will be saved in current directory instead.
+    call :prompt_yes_no "Continue with conversion? (Y/n): " "N" continue_anyway
+    if /i "%continue_anyway%"=="N" (
+        echo Conversion cancelled.
+        pause
+        exit /b 0
     )
-) else (
-    echo.
-    echo [INFO] Using existing output folder: "!output_folder!" ...
+    set "use_subfolder=false"
 )
 
-:: Set output path based on folder availability
-if not defined use_subfolder set use_subfolder=true
-if "!use_subfolder!"=="true" (
-    set "output_path=!output_folder!\"
-) else (
-    set "output_path="
-)
-
-:: Compute absolute output directory path for opening in Explorer
 set "output_dir=%CD%"
-if "!use_subfolder!"=="true" set "output_dir=%CD%\!output_folder!"
+set "output_path="
+if /i "%use_subfolder%"=="true" (
+    set "output_path=%output_folder%\"
+    for %%I in ("%CD%\%output_folder%") do set "output_dir=%%~fI"
+)
 
-:: Display summary
 echo.
 echo ..*..Conversion Summary..*..
 echo.
@@ -236,201 +122,107 @@ echo Density:        %density%
 echo Quality:        %quality%
 echo Prefix:         %prefix%
 echo Output folder:  !output_path!
-echo Command:        magick -density %density% "%input_pdf%" -quality %quality% "!output_path!%prefix%%%d%output_format%"
+echo Command:        magick -density %density% "%input_pdf%" -quality %quality% "!output_path!!prefix!%%d!output_format!"
 echo.
 
-:: Confirm before proceeding
-set /p confirm="Proceed with conversion? (Y/n): "
-if /i "%confirm%"=="n" (
+call :prompt_yes_no "Proceed with conversion? (Y/n): " "Y" confirm_pdf
+if /i "%confirm_pdf%"=="N" (
     echo .......Conversion cancelled.......
-    goto end
-)
-if /i "%confirm%"=="no" (
-    echo .......Conversion cancelled.......
-    goto end
+    exit /b 0
 )
 
-:: Execute the conversion
 echo.
-echo ..*..Converting..*.. 
+echo ..*..Converting..*..
 echo.
-echo Running ImageMagick conversion...
-echo.
-
-magick -density %density% "%input_pdf%" -quality %quality% "!output_path!%prefix%%%d%output_format%"
-
-:: Check if conversion was successful (avoid complex parentheses to prevent parser errors)
-if errorlevel 1 goto conversion_failed
+magick -density %density% "%input_pdf%" -quality %quality% "!output_path!!prefix!%%d!output_format!"
+if errorlevel 1 (
+    echo.
+    echo [ERROR] Conversion failed! Please check the error messages above.
+    echo.
+    echo Common issues:
+    echo - PDF file might be corrupted or password protected
+    echo - Insufficient disk space
+    echo - Invalid parameters
+    echo - ImageMagick configuration issues
+    goto pdf_post
+)
 
 echo.
 echo [SUCCESS] PDF conversion completed successfully!
 
-if /i "!use_subfolder!"=="true" goto success_subfolder
-goto success_cwd
-
-:success_subfolder
-echo Output files: !output_folder!\%prefix%*%output_format%
-:: Count and display created files
-for /f %%i in ('dir /b "!output_folder!\%prefix%*%output_format%" 2^>nul ^| find /c /v ""') do set file_count=%%i
-if defined file_count echo Created !file_count! image file(s) in !output_folder! folder.
-:: Automatically open the output folder
-echo.
-echo Opening output folder...
-explorer "!output_dir!" >nul 2>&1
-goto post_success
-
-:success_cwd
-echo Output files: %prefix%*%output_format%
-:: Count and display created files
-for /f %%i in ('dir /b "%prefix%*%output_format%" 2^>nul ^| find /c /v ""') do set file_count=%%i
-if defined file_count echo Created !file_count! image file(s) in current directory.
-:: Automatically open the output folder
-echo.
-echo Opening output folder...
-explorer "!output_dir!" >nul 2>&1
-goto post_success
-
-:conversion_failed
-echo.
-echo [ERROR] Conversion failed! Please check the error messages above.
-echo.
-echo Common issues:
-echo - PDF file might be corrupted or password protected
-echo - Insufficient disk space
-echo - Invalid parameters
-echo - ImageMagick configuration issues
-
-:post_success
-
-echo.
-
-:end
-echo.
-set /p return_menu="Return to main menu? (Y/n): "
-if /i "%return_menu%"=="n" goto final_exit
-if /i "%return_menu%"=="no" goto final_exit
-goto main_menu
-
-:final_exit
-echo.
-echo ==========================================================
-echo Thank you for using Image Converter Suite!
-echo ==========================================================
-echo.
-timeout /t 3 >nul
-exit
-
-:: =========================================================
-:: FEATURE 2: Convert Image Format
-:: =========================================================
-:image_format_converter
-cls
-echo.
-echo =========================================================
-echo *              Convert Image Format                     *
-echo =========================================================
-echo.
-
-:: Check if ImageMagick is available
-where magick >nul 2>nul
-if %errorlevel% neq 0 (
-    echo [ERROR] ImageMagick is not installed or not in PATH!
-    echo Please install ImageMagick from: https://imagemagick.org/script/download.php
-    echo.
-    pause
-    goto main_menu
+set "file_count="
+if /i "%use_subfolder%"=="true" (
+    echo Output files: !output_folder!\!prefix!*!output_format!
+    call :count_created_files "!output_dir!" "!prefix!*!output_format!" file_count
+) else (
+    echo Output files: !prefix!*!output_format!
+    call :count_created_files "!output_dir!" "!prefix!*!output_format!" file_count
 )
+if defined file_count echo Created %file_count% image file(s).
 
-:: Check for image files in the script directory
 echo.
+echo Opening output folder...
+explorer "!output_dir!" >nul 2>&1
+
+:pdf_post
+echo.
+call :prompt_yes_no "Return to main menu? (Y/n): " "Y" return_menu_pdf
+if /i "%return_menu_pdf%"=="Y" exit /b 0
+goto final_exit
+
+:feature_convert_format
+call :print_header "%HDR_FORMAT_LINE1%"
+call :ensure_magick
+if errorlevel 1 exit /b 0
+
 echo -- Local Image Detection --
-set "script_dir=%~dp0"
-set "found=0"
-pushd "%script_dir%" >nul 2>&1
-for %%F in (*.jpg *.jpeg *.png *.bmp *.gif *.tiff *.tif *.webp *.avif) do (
-    set /a found+=1
-    set "img!found!=%%F"
-)
-popd >nul 2>&1
-
-if %found% gtr 0 goto show_images
-echo No image files found in script directory.
 echo.
-goto after_image_list
+set "selected_image="
+call :select_file "image" selected_image %PATTERN_IMAGES%
+call :resolve_input_file "Enter image filepath (with extension): " "%selected_image%" input_image
 
-:show_images
-echo Found %found% image(s) in script directory:
-for /l %%i in (1,1,%found%) do echo %%i. !img%%i!
-echo.
-set /p img_sel="Select an image (1-%found%) or press Enter to specify path: "
-if "%img_sel%"=="" goto after_image_list
-echo %img_sel%| findstr /r "^[0-9][0-9]*$" >nul || goto after_image_list
-if %img_sel% lss 1 goto after_image_list
-if %img_sel% gtr %found% goto after_image_list
-call set "file_to_convert=%%img%img_sel%%%"
-set "input_image=%script_dir%!file_to_convert!"
-echo Selected: %input_image%
-
-:after_image_list
-
-:: Get input image filename
-:input_image_convert
-if defined input_image (
-    echo Using selected image: %input_image%
-    goto validate_input_image
-)
-set /p input_image="Enter image filepath (with extension): "
-if "!input_image!"=="" (
-    echo [ERROR] Please enter a valid filename!
-    goto input_image_convert
-)
-
-:: Sanitize: remove surrounding quotes
-set "input_image=%input_image:"=%"
-:: Normalize to full path
-for %%I in ("%input_image%") do set "input_image=%%~fI"
-
-:validate_input_image
-if not exist "%input_image%" (
-    echo [ERROR] File '%input_image%' does not exist!
-    echo.
-    set "input_image="
-    goto input_image_convert
-)
-
-:: Get output format
+:format_prompt
 echo.
 echo Available format options:
 echo   1) jpeg
 echo   2) jpg
 echo   3) custom (avif, webp, tiff, bmp, etc.)
 echo.
-set /p format_choice="Select output format (default: png): "
-if "%format_choice%"=="" set "output_format_conv=png"
-if "%format_choice%"=="1" set "output_format_conv=jpeg"
-if "%format_choice%"=="2" set "output_format_conv=jpg"
-if "%format_choice%"=="3" (
-    set /p custom_format="Enter custom format: "
-    if "!custom_format!"=="" (
-        echo [ERROR] Custom format cannot be empty!
-        goto input_image_convert
+set "output_format_conv="
+set /p format_choice="Select output format (default: %DEF_CONVERT_FORMAT%): "
+if "%format_choice%"=="" (
+    set "output_format_conv=%DEF_CONVERT_FORMAT%"
+) else (
+    if "%format_choice%"=="1" (
+        set "output_format_conv=jpeg"
+    ) else (
+        if "%format_choice%"=="2" (
+            set "output_format_conv=jpg"
+        ) else (
+            if "%format_choice%"=="3" (
+                set /p output_format_conv="Enter custom format: "
+                if "%output_format_conv%"=="" (
+                    echo [ERROR] Custom format cannot be empty!
+                    goto format_prompt
+                )
+            ) else (
+                set "output_format_conv=%format_choice%"
+            )
+        )
     )
-    set "output_format_conv=!custom_format!"
 )
-if not defined output_format_conv set "output_format_conv=png"
-
-:: Remove dot if present
+if not defined output_format_conv (
+    echo [ERROR] Output format cannot be empty!
+    goto format_prompt
+)
 if "!output_format_conv:~0,1!"=="." set "output_format_conv=!output_format_conv:~1!"
 
-:: Generate output filename
 for %%I in ("%input_image%") do (
     set "img_dir=%%~dpI"
     set "img_base=%%~nI"
-    set "img_ext=%%~xI"
 )
 set "output_image=!img_dir!!img_base!_conv.!output_format_conv!"
 
-:: Display conversion summary
 echo.
 echo ..*..Conversion Summary..*..
 echo.
@@ -438,190 +230,299 @@ echo Input image:    %input_image%
 echo Output format:  !output_format_conv!
 echo Output file:    !output_image!
 echo.
-set /p confirm_conv="Proceed with conversion? (Y/n): "
-if /i "%confirm_conv%"=="n" goto end
-if /i "%confirm_conv%"=="no" goto end
+call :prompt_yes_no "Proceed with conversion? (Y/n): " "Y" confirm_conv
+if /i "%confirm_conv%"=="N" exit /b 0
 
-:: Execute conversion
 echo.
 echo ..*..Converting..*..
 echo.
 magick "%input_image%" "!output_image!"
-
 if errorlevel 1 (
     echo.
     echo [ERROR] Conversion failed!
     pause
-    goto end
+    exit /b 0
 )
 
 echo.
 echo [SUCCESS] Image converted successfully!
 echo Output: !output_image!
+call :display_size "!output_image!" "File size"
 
-:: Display file size of converted image
-for %%A in ("!output_image!") do set "converted_size=%%~zA"
-set /a converted_size_kb=!converted_size! / 1024
-set /a converted_size_mb=!converted_size_kb! / 1024
-echo File size: !converted_size! bytes (!converted_size_kb! KB / !converted_size_mb! MB)
-goto end
-
-:: =========================================================
-:: FEATURE 3: Compress Image/PDF to Target Size
-:: =========================================================
-:compress_image
-cls
 echo.
-echo =========================================================
-echo *          Compress Image/PDF to Target Size            *
-echo =========================================================
-echo.
+call :prompt_yes_no "Return to main menu? (Y/n): " "Y" return_menu_format
+if /i "%return_menu_format%"=="Y" exit /b 0
+goto final_exit
 
-:: Check if ImageMagick is available
-where magick >nul 2>nul
-if %errorlevel% neq 0 (
-    echo [ERROR] ImageMagick is not installed or not in PATH!
-    echo Please install ImageMagick from: https://imagemagick.org/script/download.php
-    echo.
-    pause
-    goto main_menu
-)
+:feature_compress_file
+call :print_header "%HDR_COMP_LINE1%"
+call :ensure_magick
+if errorlevel 1 exit /b 0
 
-:: Check for files in the script directory
-echo.
 echo -- Local File Detection --
-set "script_dir=%~dp0"
-set "found=0"
-pushd "%script_dir%" >nul 2>&1
-for %%F in (*.jpg *.jpeg *.png *.bmp *.gif *.tiff *.tif *.webp *.avif *.pdf) do (
-    set /a found+=1
-    set "file!found!=%%F"
-)
-popd >nul 2>&1
-
-if %found% gtr 0 goto show_files_compress
-echo No supported files found in script directory.
 echo.
-goto after_file_list_compress
+set "selected_file="
+call :select_file "file" selected_file %PATTERN_COMPRESS%
+call :resolve_input_file "Enter filepath (with extension): " "%selected_file%" input_file
 
-:show_files_compress
-echo Found %found% file(s) in script directory:
-for /l %%i in (1,1,%found%) do echo %%i. !file%%i!
-echo.
-set /p file_sel="Select a file (1-%found%) or press Enter to specify path: "
-if "%file_sel%"=="" goto after_file_list_compress
-echo %file_sel%| findstr /r "^[0-9][0-9]*$" >nul || goto after_file_list_compress
-if %file_sel% lss 1 goto after_file_list_compress
-if %file_sel% gtr %found% goto after_file_list_compress
-call set "file_to_compress=%%file%file_sel%%%"
-set "input_file=%script_dir%!file_to_compress!"
-echo Selected: %input_file%
-
-:after_file_list_compress
-
-:: Get input filename
-:input_file_compress
-if defined input_file (
-    echo Using selected file: %input_file%
-    goto validate_input_compress
-)
-set /p input_file="Enter filepath (with extension): "
-if "!input_file!"=="" (
-    echo [ERROR] Please enter a valid filename!
-    goto input_file_compress
-)
-
-:: Sanitize
-set "input_file=%input_file:"=%"
-for %%I in ("%input_file%") do set "input_file=%%~fI"
-
-:validate_input_compress
-if not exist "%input_file%" (
-    echo [ERROR] File '%input_file%' does not exist!
-    echo.
-    set "input_file="
-    goto input_file_compress
-)
-
-:: Get original file size
 for %%A in ("%input_file%") do set "orig_size=%%~zA"
-set /a orig_size_kb=!orig_size! / 1024
-if !orig_size_kb! lss 1 set orig_size_kb=1
-echo Original size: !orig_size! bytes (~!orig_size_kb! KB)
+set /a orig_size_kb=orig_size/1024
+if %orig_size_kb% lss 1 set orig_size_kb=1
+echo Original size: %orig_size% bytes (~%orig_size_kb% KB)
 
-:: Get target percentage
 echo.
 echo Enter target file size percentage (1-100).
 echo Example: 50 means the output file will be 50%% of the original size.
-set /p target_percent="Target Percentage (default: %DEF_COMPRESS_PERCENT%): "
-if "!target_percent!"=="" set "target_percent=%DEF_COMPRESS_PERCENT%"
+call :prompt_numeric "Target Percentage (default: %DEF_COMPRESS_PERCENT%): " "%DEF_COMPRESS_PERCENT%" "1" "100" target_percent
 
-:: Validate numeric
-echo !target_percent!| findstr /r "^[0-9][0-9]*$" >nul
-if %errorlevel% neq 0 (
-    echo [ERROR] Please enter a valid number!
-    goto validate_input_compress
-)
-
-:: Calculate target size in KB
 set /a target_size_kb = orig_size_kb * target_percent / 100
-if !target_size_kb! lss 1 set target_size_kb=1
-set "target_size=!target_size_kb!KB"
+if %target_size_kb% lss 1 set target_size_kb=1
+set "target_size=%target_size_kb%KB"
 set /a target_size_mb = target_size_kb / 1024
-set "target_size_display=!target_size_kb!KB (~!target_size_mb! MB)"
-echo Target size calculated: !target_size_display!
+echo Target size calculated: %target_size_kb%KB (~%target_size_mb% MB)
 
-:: Get output filename
 for %%I in ("%input_file%") do (
     set "file_dir=%%~dpI"
     set "file_base=%%~nI"
     set "file_ext=%%~xI"
 )
-
-:: Default output format to jpg for best compression results with 'extent'
 set "output_ext=.jpg"
 if /i "%file_ext%"==".pdf" set "output_ext=.pdf"
-
 set "output_file=!file_dir!!file_base!_comp!output_ext!"
 
-:: Display summary
 echo.
 echo ..*..Compression Summary..*..
 echo.
 echo Input file:     %input_file%
-echo Target Size:    !target_size_display!
+echo Target Size:    %target_size_kb%KB (~%target_size_mb% MB)
 echo Output file:    !output_file!
 echo.
-set /p confirm_comp="Proceed with compression? (Y/n): "
-if /i "%confirm_comp%"=="n" goto end
-if /i "%confirm_comp%"=="no" goto end
+call :prompt_yes_no "Proceed with compression? (Y/n): " "Y" confirm_comp
+if /i "%confirm_comp%"=="N" exit /b 0
 
-:: Execute conversion
 echo.
 echo ..*..Compressing..*..
 echo.
-
 if /i "%file_ext%"==".pdf" (
     echo [INFO] Processing PDF. This may rasterize the content to achieve the target size.
 )
 
 magick "%input_file%" -define jpeg:extent=%target_size% "!output_file!"
-
 if errorlevel 1 (
     echo.
     echo [ERROR] Compression failed!
     pause
-    goto end
+    exit /b 0
 )
 
 echo.
 echo [SUCCESS] File compressed successfully!
 echo Output: !output_file!
+call :display_size "!output_file!" "New file size"
 
-:: Display file size
-for %%A in ("!output_file!") do set "new_size=%%~zA"
-set /a new_size_kb=!new_size! / 1024
-set /a new_size_mb=!new_size_kb! / 1024
-echo New File size: !new_size! bytes (!new_size_kb! KB / !new_size_mb! MB)
+echo.
+call :prompt_yes_no "Return to main menu? (Y/n): " "Y" return_menu_comp
+if /i "%return_menu_comp%"=="Y" exit /b 0
+goto final_exit
 
-goto end
+:ensure_magick
+if "%MAGICK_AVAILABLE%"=="1" exit /b 0
+where magick >nul 2>nul
+if errorlevel 1 (
+    echo [ERROR] ImageMagick is not installed or not in PATH!
+    echo Please install ImageMagick from: https://imagemagick.org/script/download.php
+    echo.
+    pause
+    exit /b 1
+)
+set "MAGICK_AVAILABLE=1"
+exit /b 0
+
+:select_file
+setlocal enabledelayedexpansion
+set "desc=%~1"
+set "result="
+set "found=0"
+set "script_dir=!SCRIPT_DIR!"
+shift
+set "out_var=%~1"
+shift
+if not defined script_dir set "script_dir=%CD%"
+pushd "!script_dir!" >nul 2>&1
+:select_file_loop
+if "%~1"=="" goto select_file_done
+for %%F in (%1) do (
+    if exist "%%~fF" (
+        set /a found+=1
+        set "file!found!=%%~fF"
+    )
+)
+shift
+goto select_file_loop
+:select_file_done
+popd >nul 2>&1
+if !found! gtr 0 (
+    echo Found !found! %desc% file^(s^) in script directory:
+    for /l %%i in (1,1,!found!) do (
+        for %%G in ("!file%%i!") do echo   %%i. %%~nxG
+    )
+    echo.
+    set "sel="
+    set /p sel="Select a %desc% (1-!found!) or press Enter to skip: "
+    if defined sel (
+        echo !sel!| findstr /r "^[0-9][0-9]*$" >nul
+        if not errorlevel 1 (
+            if !sel! geq 1 if !sel! leq !found! (
+                for %%i in (!sel!) do set "result=!file%%i!"
+                for %%G in ("!result!") do echo Selected: %%~nxG
+            )
+        )
+    )
+)
+if defined result (
+    endlocal & set "%out_var%=%result%" & exit /b 0
+)
+endlocal & set "%out_var%=" & exit /b 0
+
+:resolve_input_file
+setlocal enabledelayedexpansion
+set "prompt=%~1"
+set "preselected=%~2"
+if defined preselected (
+    if exist "!preselected!" (
+        for %%A in ("!preselected!") do set "pre_disp=%%~nxA"
+        if defined pre_disp (
+            echo Using selected file: !pre_disp!
+        ) else (
+            echo Using selected file: !preselected!
+        )
+        endlocal & set "%~3=%preselected%" & exit /b 0
+    ) else (
+        echo [WARN] Preselected file '!preselected!' not found. Please choose a file.
+    )
+)
+:resolve_loop
+set "input="
+set /p input="%prompt%"
+if not defined input (
+    echo [ERROR] Please enter a valid filename!
+    goto resolve_loop
+)
+set "input=!input:"=!"
+for %%I in ("!input!") do set "input=%%~fI"
+if not exist "!input!" (
+    echo [ERROR] File '!input!' does not exist!
+    goto resolve_loop
+)
+endlocal & set "%~3=%input%" & exit /b 0
+
+:prompt_numeric
+setlocal enabledelayedexpansion
+set "prompt=%~1"
+set "default=%~2"
+set "min=%~3"
+set "max=%~4"
+:prompt_numeric_loop
+set "value="
+set /p value="%prompt%"
+if not defined value set "value=%default%"
+if not defined value (
+    echo [ERROR] Value is required!
+    goto prompt_numeric_loop
+)
+set "value=!value:"=!"
+echo !value!| findstr /r "^[0-9][0-9]*$" >nul
+if errorlevel 1 (
+    echo [ERROR] Please enter a numeric value!
+    goto prompt_numeric_loop
+)
+if defined min (
+    if !value! lss !min! (
+        echo [ERROR] Value must be at least !min!!
+        goto prompt_numeric_loop
+    )
+)
+if defined max (
+    if !value! gtr !max! (
+        echo [ERROR] Value must be !max! or less!
+        goto prompt_numeric_loop
+    )
+)
+endlocal & set "%~5=%value%" & exit /b 0
+
+:prompt_yes_no
+setlocal enabledelayedexpansion
+set "prompt=%~1"
+set "default=%~2"
+if not defined default set "default=Y"
+:prompt_yes_no_loop
+set "answer="
+set /p answer="%prompt%"
+if not defined answer set "answer=!default!"
+set "first=!answer:~0,1!"
+if /i "!first!"=="Y" (
+    endlocal & set "%~3=Y" & exit /b 0
+)
+if /i "!first!"=="N" (
+    endlocal & set "%~3=N" & exit /b 0
+)
+echo [ERROR] Please enter Y or N.
+goto prompt_yes_no_loop
+
+:display_size
+if not exist "%~1" exit /b 0
+setlocal enabledelayedexpansion
+set "file=%~1"
+set "label=%~2"
+for %%A in ("!file!") do set "size=%%~zA"
+set /a sizeKB=size/1024
+if !sizeKB! lss 1 set sizeKB=1
+set /a sizeMB=sizeKB/1024
+if not defined label set "label=File size"
+echo !label!: !size! bytes (!sizeKB! KB / !sizeMB! MB)
+endlocal & exit /b 0
+
+:ensure_directory
+set "target=%~1"
+if "%target%"=="" exit /b 1
+if exist "%target%" exit /b 0
+mkdir "%target%" 2>nul
+if exist "%target%" exit /b 0
+exit /b 1
+
+:print_header
+cls
+echo.
+echo %HEADER_BORDER%
+if not "%~1"=="" echo %~1
+if not "%~2"=="" echo %~2
+if not "%~3"=="" echo %~3
+echo %HEADER_BORDER%
+echo.
+exit /b 0
+
+:count_created_files
+setlocal enabledelayedexpansion
+set "dir=%~1"
+set "pattern=%~2"
+set "count=0"
+if not exist "!dir!" (
+    endlocal & set "%~3=0" & exit /b 0
+)
+pushd "!dir!" >nul 2>&1
+for /f %%i in ('dir /b "!pattern!" 2^>nul ^| find /c /v ""') do set "count=%%i"
+popd >nul 2>&1
+endlocal & set "%~3=%count%" & exit /b 0
+
+:final_exit
+echo.
+echo %HEADER_BORDER%
+echo Thank you for using Image Converter Suite!
+echo %HEADER_BORDER%
+echo.
+timeout /t 3 >nul
+goto end_script
+
+:end_script
+endlocal
+exit /b 0
