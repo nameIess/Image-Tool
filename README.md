@@ -284,6 +284,12 @@ Ghostscript is not installed.
 
 This project is licensed under the MIT License - see the [LICENSE](LICENSE) file for details.
 
+## ⚠️ Disclaimer
+
+Image-Tool is an independent project and is not affiliated with ImageMagick Studio LLC or Artifex Software, Inc.
+
+All trademarks and software names belong to their respective owners.
+
 ## 🤝 Contributing
 
 Contributions are welcome! Please feel free to submit a Pull Request.
