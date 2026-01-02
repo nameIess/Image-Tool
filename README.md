@@ -85,11 +85,11 @@ If dependencies are missing, clear instructions and download links are provided.
 
 ## 🛠️ Installation
 
-### Option 1: Download Pre-built Binary
+### 1️⃣ Option 1: Download Pre-built Binary
 
 Download `Image-Tool.exe` from the [Releases](https://github.com/nameIess/Image-Tool/releases) page.
 
-### Option 2: Build from Source
+### 2️⃣ Option 2: Build from Source
 
 **Requirements:** Go 1.21 or higher
 
@@ -224,7 +224,6 @@ This application follows strict security principles:
 - ✅ User-managed dependencies only
 
 ## 👨‍💻 Development
-
 ### 🏗️ Building with Version Info (Windows)
 
 To embed version information in the Windows executable:
