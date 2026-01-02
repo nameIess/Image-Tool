@@ -1,4 +1,4 @@
-package tui
+package ui
 
 import (
 	"fmt"
@@ -11,6 +11,9 @@ import (
 	"github.com/charmbracelet/bubbles/textinput"
 	tea "github.com/charmbracelet/bubbletea"
 	"github.com/charmbracelet/lipgloss"
+
+	"imagetool/internal/core"
+	"imagetool/internal/logging"
 )
 
 // FilePickerMode determines what files to show
@@ -140,6 +143,28 @@ func (fp *FilePickerModel) loadFiles() {
 	fp.entries = files
 }
 
+// looksLikePath checks if the input string looks like a file path
+// This helps detect drag-and-drop or pasted paths
+func looksLikePath(s string) bool {
+	// Must be reasonably long to be a path
+	if len(s) < 3 {
+		return false
+	}
+	// Windows absolute path: C:\ or D:\ etc
+	if len(s) >= 3 && s[1] == ':' && (s[2] == '\\' || s[2] == '/') {
+		return true
+	}
+	// UNC path: \\server\share
+	if strings.HasPrefix(s, "\\\\") {
+		return true
+	}
+	// Path with backslashes (Windows)
+	if strings.Contains(s, "\\") && strings.Contains(s, ".") {
+		return true
+	}
+	return false
+}
+
 // matchesFilter checks if file matches current mode
 func (fp *FilePickerModel) matchesFilter(name string) bool {
 	ext := strings.ToLower(filepath.Ext(name))
@@ -148,22 +173,9 @@ func (fp *FilePickerModel) matchesFilter(name string) bool {
 	case FilePickerPDF:
 		return ext == ".pdf"
 	case FilePickerImage:
-		imageExts := []string{".jpg", ".jpeg", ".png", ".gif", ".bmp", ".tiff", ".tif", ".webp", ".avif"}
-		for _, e := range imageExts {
-			if ext == e {
-				return true
-			}
-		}
-		return false
+		return core.IsImageFile(name)
 	case FilePickerAll:
-		// PDF and images
-		allExts := []string{".pdf", ".jpg", ".jpeg", ".png", ".gif", ".bmp", ".tiff", ".tif", ".webp", ".avif"}
-		for _, e := range allExts {
-			if ext == e {
-				return true
-			}
-		}
-		return false
+		return core.IsImageFile(name) || core.IsPDFFile(name)
 	}
 	return true
 }
@@ -189,17 +201,24 @@ func (fp *FilePickerModel) Update(msg tea.Msg) (*FilePickerModel, tea.Cmd) {
 					if info.IsDir() {
 						// If directory entered, show error - we need a file
 						fp.err = fmt.Errorf("please enter a file path, not a directory")
+						logging.Warn("User entered directory instead of file", map[string]interface{}{"path": path})
 					} else {
 						// Validate file matches the filter
 						if fp.matchesFilter(filepath.Base(path)) {
 							fp.selectedFile = path
 							fp.done = true
+							logging.Debug("File selected", map[string]interface{}{"path": path})
 						} else {
 							fp.err = fmt.Errorf("file type not supported for this operation")
+							logging.Warn("Unsupported file type selected", map[string]interface{}{
+								"path": path,
+								"mode": fp.mode,
+							})
 						}
 					}
 				} else {
 					fp.err = fmt.Errorf("file not found: %s", path)
+					logging.Warn("File not found", map[string]interface{}{"path": path, "error": err.Error()})
 				}
 				return fp, nil
 			case "esc":
@@ -215,6 +234,21 @@ func (fp *FilePickerModel) Update(msg tea.Msg) (*FilePickerModel, tea.Cmd) {
 
 	switch msg := msg.(type) {
 	case tea.KeyMsg:
+		keyStr := msg.String()
+
+		// Auto-detect pasted path (drag and drop or paste)
+		// If it looks like a path (contains : or \ or /), switch to input mode
+		if !fp.showInput && looksLikePath(keyStr) {
+			fp.showInput = true
+			fp.err = nil
+			fp.pathInput.Focus()
+			fp.pathInput.SetValue(keyStr)
+			// Move cursor to end
+			fp.pathInput.CursorEnd()
+			logging.Debug("Auto-detected path input", map[string]interface{}{"input": keyStr})
+			return fp, textinput.Blink
+		}
+
 		switch {
 		case key.Matches(msg, keys.Up):
 			if fp.cursor > 0 {
@@ -237,7 +271,7 @@ func (fp *FilePickerModel) Update(msg tea.Msg) (*FilePickerModel, tea.Cmd) {
 				fp.done = true
 			}
 
-		case msg.String() == "p": // Manual path input
+		case keyStr == "p": // Manual path input
 			fp.showInput = true
 			fp.err = nil
 			fp.pathInput.Focus()
@@ -289,7 +323,7 @@ func (fp *FilePickerModel) View() string {
 		b.WriteString("\n\n")
 		b.WriteString(helpStyle.Render("Press 'p' to enter a file path manually • Esc to go back"))
 	} else {
-		// Show file count like batch file: "Found X image file(s) in directory:"
+		// Show file count
 		countMsg := fmt.Sprintf("Found %d %s file(s):", len(fp.entries), fileTypeDesc)
 		b.WriteString(lipgloss.NewStyle().Foreground(primaryColor).Bold(true).Render(countMsg))
 		b.WriteString("\n\n")
@@ -315,7 +349,7 @@ func (fp *FilePickerModel) View() string {
 				style = selectedFileStyle
 			}
 
-			// File number like batch file
+			// File number
 			numStr := fmt.Sprintf("%2d. ", i+1)
 
 			icon := IconFile
@@ -326,7 +360,7 @@ func (fp *FilePickerModel) View() string {
 			}
 
 			// Format file size
-			sizeStr := fmt.Sprintf(" (%s)", formatSize(entry.Size))
+			sizeStr := fmt.Sprintf(" (%s)", core.FormatSize(entry.Size))
 
 			line := style.Render(cursor + numStr + icon + " " + entry.Name + sizeStr)
 			b.WriteString(line)
@@ -381,18 +415,4 @@ func (fp *FilePickerModel) Reset() {
 	fp.done = false
 	fp.cancelled = false
 	fp.cursor = 0
-}
-
-// formatSize formats bytes to human readable
-func formatSize(bytes int64) string {
-	const unit = 1024
-	if bytes < unit {
-		return fmt.Sprintf("%d B", bytes)
-	}
-	div, exp := int64(unit), 0
-	for n := bytes / unit; n >= unit; n /= unit {
-		div *= unit
-		exp++
-	}
-	return fmt.Sprintf("%.1f %cB", float64(bytes)/float64(div), "KMGTPE"[exp])
 }
