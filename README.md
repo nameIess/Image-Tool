@@ -21,9 +21,10 @@ Interactive prompts, sensible defaults, and a simple main menu make it fast to u
   - Output file name: `<original_name>_conv.<format>`
   - Shows converted file size in bytes/KB/MB
   - Does NOT auto‑open the folder
-- ✅ **Compression**: Compress images or PDFs to a target file size percentage
+    -- ✅ **Compression**: Compress images or PDFs to a target file size percentage or a fixed file size
   - Target a specific percentage of the original file size (e.g., 50%)
-  - Supports both Images and PDFs
+  - Or, compress images to a fixed file size (e.g., 20KB, 1MB)
+  - Supports both Images and PDFs for percentage; fixed size for images only
   - Output file name: `<original_name>_comp.<ext>`
 - ✅ **Quoted/Absolute Path Support**: Paste full paths with or without quotes; the script Normalizes them
 - ✅ **Multiple Format Support**:
@@ -182,16 +183,17 @@ Notes:
 
 ### Compress Image/PDF
 
-Reduce the file size of an image or PDF by targeting a percentage of the original size.
+Reduce the file size of an image or PDF by targeting a percentage of the original size, or compress images to a fixed file size.
 
 1. Select "Compress Image/PDF to Target Size" from the main menu.
 2. Optional: Pick a local file (auto‑detected), or press Enter and paste a path.
-3. Enter target percentage (1-100).
-   - Example: `50` will attempt to compress the file to 50% of its original size.
-4. The script calculates the target size in KB/MB.
+3. Choose compression mode:
+   - **By percentage**: Enter target percentage (1-100). Example: `50` will attempt to compress the file to 50% of its original size.
+   - **To fixed file size (images only)**: Enter target value (e.g., `20`) and unit (`KB`, `MB`, or `B`). Example: `20 KB` will attempt to compress the image to 20KB.
+4. The script calculates the target size and shows a summary.
 5. Compression runs using ImageMagick's `extent` feature (for JPEG) or general compression.
    - Output file: `<original_name>_comp.<ext>`
-   - Note: PDF compression may rasterize content.
+   - Note: PDF compression may rasterize content. Fixed size compression is not supported for PDFs.
 
 ## Notes and Troubleshooting
 
@@ -258,6 +260,7 @@ If you encounter any issues:
 
 ## Version History
 
+- **v1.5** - Added fixed file size compression for images: compress images to a user-specified size (e.g., 20KB, 1MB).
 - **v1.4** - Added Compression feature: compress images and PDFs to a target percentage of the original file size.
 - **v1.3** - Introduced main menu; added Image Format Conversion (jpeg/jpg/custom); shows converted image file size; PDF conversions auto‑open folder; image conversions do not.
 - **v1.2** - Per‑PDF output folders (`<name>_images`), automatic opening of the output folder after success, improved robust handling of quoted/absolute input paths, and a single final exit instead of multiple pauses.
