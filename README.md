@@ -6,8 +6,10 @@ A Windows batch script that converts PDF files to various image formats using Im
 
 - ✅ **Interactive User Prompts**: Prompts user for input PDF filename, output format, density, quality, and filename prefix
 - ✅ **Local PDF Detection & Selection**: Automatically lists PDF files in the script's folder at startup and lets you select one to use (skips the filename prompt)
-- ✅ **Automatic Folder Management**: Automatically creates `PDF_Images` folder if it does not exist
-- ✅ **Organized Output**: Saves all converted images inside the `PDF_Images` directory
+- ✅ **Per‑PDF Output Folders**: Images are saved to a folder named after the PDF, suffixed with `_image` (e.g., `Report_image`) to keep outputs separated
+- ✅ **Automatic Folder Open**: After successful conversion, the output folder opens automatically in Explorer
+- ✅ **Quoted/Absolute Path Support**: You can paste a full path with or without quotes; the script normalizes it safely
+- ✅ **Organized Output**: Saves all converted images inside the derived per‑PDF folder, or the current directory if folder creation fails
 - ✅ **Multiple Format Support**: Convert PDF files to PNG, JPG, JPEG, BMP, TIFF, GIF formats
 - ✅ **Customizable Settings**: Adjustable output quality (1-100) and density (DPI) settings
 - ✅ **Input Validation**: Comprehensive error checking and user-friendly feedback
@@ -23,7 +25,6 @@ A Windows batch script that converts PDF files to various image formats using Im
    - Visit: [ImageMagick](https://imagemagick.org/script/download.php)
    - Download the Windows version (choose x64 or x86 based on your system)
    - Run the installer as Administrator
-   - ✅ **Important**: Check "Install ImageMagick for all users"
    - ✅ **Important**: Check "Add application directory to your system path"
 
 2. **Install Ghostscript (Required for PDF handling):**
@@ -32,11 +33,11 @@ A Windows batch script that converts PDF files to various image formats using Im
    - Download and install the appropriate version for your system
 
 3. **Clone or Download the Repository:**
-
    ```cmd
-   git clone <repository-url>
+   git clone https://github.com/nameIess/pdf_converter.git
    cd pdf_converter
    ```
+   Download: [pdf_converter](https://github.com/nameIess/pdf_converter/archive/refs/heads/master.zip)
 
 4. **Verify Installation:**
    ```cmd
@@ -50,8 +51,7 @@ A Windows batch script that converts PDF files to various image formats using Im
 ```
 pdf_converter/
 ├── Convert.bat          # Main conversion script
-├── README.md            # This documentation file
-└── PDF_Images/          # Output directory for converted images (created on first run)
+└── README.md            # This documentation file
 ```
 
 ## Usage Instructions
@@ -64,7 +64,7 @@ pdf_converter/
    Convert.bat
    ```
 
-2. **Optional: Pick a local PDF (auto-detected):**
+2. **Optional: Pick a local PDF (auto‑detected):**
 
    - If there are any `*.pdf` files in the same folder as `Convert.bat`, the script will list them like:
 
@@ -109,24 +109,24 @@ Select a PDF to use (1-1) or press Enter to skip: 1
 Selected: F:\Code\pdf_converter\Example.pdf
 Using selected PDF: F:\Code\pdf_converter\Example.pdf
 
-┌─ Input Parameters ─┐
+-- Input Parameters --
 
 Enter output image format (default: png): png
 Enter density value (default: 180): 300
 Enter quality value 1-100 (default: 90): 95
 Enter output filename prefix (default: Page-): Doc-
 
-┌─ Conversion Summary ─┐
+..*..Conversion Summary..*..
 
 Input PDF:      F:\Code\pdf_converter\Example.pdf
 Output format:  .png
 Density:        300
 Quality:        95
 Prefix:         Doc-
-Output folder:  PDF_Images\
-Command:        magick -density 300 "F:\\Code\\pdf_converter\\Example.pdf" -quality 95 "PDF_Images\Doc-%d.png"
+Output folder:  Example_image\
+Command:        magick -density 300 "F:\\Code\\pdf_converter\\Example.pdf" -quality 95 "Example_image\Doc-%d.png"
 
-Proceed with conversion? (Y/N): Y
+Proceed with conversion? (y/N): y
 ```
 
 **Result**: Creates `PDF_Images/Doc-0.png`, `PDF_Images/Doc-1.png`, etc.
@@ -135,7 +135,7 @@ Proceed with conversion? (Y/N): Y
 
 ### Important Notes
 
-- 📁 **Output Location**: All converted images are automatically saved in the `PDF_Images` folder
+- 📁 **Output Location**: Converted images are saved in a per‑PDF folder named `<PDF name>_image` in the current working directory. If folder creation fails, output falls back to the current directory.
 - 🗂️ **Local PDF Detection**: At startup, the script scans the script folder for `*.pdf` and lets you pick one. To use a PDF in a different folder, either move it next to `Convert.bat` or enter its full path when prompted.
 - 🔄 **Automatic Folder Creation**: The script creates the `PDF_Images` directory if it doesn't exist
 - 📋 **Multi-page Support**: Each page of the PDF becomes a separate image file
@@ -186,23 +186,15 @@ Proceed with conversion? (Y/N): Y
 - **Ghostscript**: Latest version recommended
 - **Disk Space**: Varies based on PDF size and output settings
 
-## License
-
-This project is open source and available under the [MIT License](LICENSE).
-
-## Contributing
-
-Contributions are welcome! Please feel free to submit a Pull Request.
-
 ## Support
 
 If you encounter any issues:
 
-1. Check the troubleshooting section above
-2. Verify ImageMagick installation
-3. Ensure PDF file is not corrupted or password-protected
+1. Verify ImageMagick installation
+2. Ensure PDF file is not corrupted or password-protected
 
 ## Version History
 
+- **v1.2** - Per‑PDF output folders (`<name>_image`), automatic opening of the output folder after success, improved robust handling of quoted/absolute input paths, and a single final exit instead of multiple pauses
 - **v1.1** - Added local PDF detection and selection at startup; selected file is used automatically for conversion (no auto-open)
 - **v1.0** - Initial release with basic PDF to image conversion functionality

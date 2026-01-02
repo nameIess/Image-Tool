@@ -4,6 +4,15 @@ setlocal enabledelayedexpansion
 :: PDF to Image Converter using ImageMagick
 :: =======================================
 
+:: -----------------------------------------------------------------
+:: Centralized Defaults (edit here to change script default values)
+:: -----------------------------------------------------------------
+set "DEF_OUTPUT_FORMAT=png"
+set "DEF_DENSITY=180"
+set "DEF_QUALITY=90"
+set "DEF_PREFIX=Page-"
+:: -----------------------------------------------------------------
+
 echo.
 echo =========================================================
 echo *                    PDF to Image Converter             *        
@@ -34,6 +43,8 @@ for %%F in (*.pdf) do (
 popd >nul 2>&1
 
 if %found% gtr 0 goto show_pdfs
+echo No PDF files found in script directory.
+echo.
 goto after_pdf_list
 
 :show_pdfs
@@ -68,6 +79,11 @@ if "%input_pdf%"=="" (
     goto input_pdf
 )
 
+:: Sanitize: remove surrounding quotes if user pasted a quoted path
+set "input_pdf=%input_pdf:"=%"
+:: Normalize to full path (handles relative paths and spaces)
+for %%I in ("%input_pdf%") do set "input_pdf=%%~fI"
+
 :: Check if file exists
 :validate_input_file
 if not exist "%input_pdf%" (
@@ -80,8 +96,8 @@ if not exist "%input_pdf%" (
 :output_format
 echo.
 echo Available formats: png, jpg, jpeg, bmp, tiff, gif
-set /p output_format="Enter output image format (default: png): "
-if "%output_format%"=="" set output_format=png
+set /p output_format="Enter output image format (default: %DEF_OUTPUT_FORMAT%): "
+if "%output_format%"=="" set "output_format=%DEF_OUTPUT_FORMAT%"
 
 :: Validate format (add dot if not present)
 if not "!output_format:~0,1!"=="." set output_format=.!output_format!
@@ -89,8 +105,8 @@ if not "!output_format:~0,1!"=="." set output_format=.!output_format!
 :: Get density value
 :density_input
 echo.
-set /p density="Enter density value (default: 180): "
-if "%density%"=="" set density=180
+set /p density="Enter density value (default: %DEF_DENSITY%): "
+if "%density%"=="" set "density=%DEF_DENSITY%"
 
 :: Validate density is numeric
 echo %density%| findstr /r "^[0-9][0-9]*$" >nul
@@ -102,8 +118,8 @@ if %errorlevel% neq 0 (
 :: Get quality value
 :quality_input
 echo.
-set /p quality="Enter quality value 1-100 (default: 90): "
-if "%quality%"=="" set quality=90
+set /p quality="Enter quality value 1-100 (default: %DEF_QUALITY%): "
+if "%quality%"=="" set "quality=%DEF_QUALITY%"
 
 :: Validate quality is numeric and in range
 echo %quality%| findstr /r "^[0-9][0-9]*$" >nul
@@ -123,20 +139,24 @@ if %quality% gtr 100 (
 
 :: Get output filename prefix
 echo.
-set /p prefix="Enter output filename prefix (default: Page-): "
-if "%prefix%"=="" set prefix=Page-
+set /p prefix="Enter output filename prefix (default: %DEF_PREFIX%): "
+if "%prefix%"=="" set "prefix=%DEF_PREFIX%"
 
-:: Check if PDF_Images folder exists, create if not
-if not exist "PDF_Images" (
+:: Derive output folder name from input PDF filename (without extension)
+for %%I in ("%input_pdf%") do set "pdf_base=%%~nI"
+set "output_folder=!pdf_base!_image"
+
+:: Check if output folder exists, create if not
+if not exist "!output_folder!" (
     echo.
-    echo [INFO] Creating PDF_Images folder...
-    mkdir "PDF_Images" 2>nul
-    if exist "PDF_Images" (
-        echo [SUCCESS] PDF_Images folder created successfully!
+    echo [INFO] Creating output folder: "!output_folder!" ...
+    mkdir "!output_folder!" 2>nul
+    if exist "!output_folder!" (
+        echo [SUCCESS] Folder created: "!output_folder!"
     ) else (
-        echo [ERROR] Failed to create PDF_Images folder!
+        echo [ERROR] Failed to create output folder: "!output_folder!"!
         echo [INFO] This might be due to permissions or disk space issues.
-        echo [INFO] Trying to create folder in current directory...
+        echo [INFO] Falling back to current directory for output files.
         echo Current directory: %CD%
         echo.
         set /p continue_anyway="Continue with conversion anyway? Images will be saved in current directory (Y/N): "
@@ -149,16 +169,20 @@ if not exist "PDF_Images" (
     )
 ) else (
     echo.
-    echo [INFO] Using existing PDF_Images folder...
+    echo [INFO] Using existing output folder: "!output_folder!" ...
 )
 
 :: Set output path based on folder availability
 if not defined use_subfolder set use_subfolder=true
 if "!use_subfolder!"=="true" (
-    set "output_path=PDF_Images\"
+    set "output_path=!output_folder!\"
 ) else (
     set "output_path="
 )
+
+:: Compute absolute output directory path for opening in Explorer
+set "output_dir=%CD%"
+if "!use_subfolder!"=="true" set "output_dir=%CD%\!output_folder!"
 
 :: Display summary
 echo.
@@ -174,9 +198,9 @@ echo Command:        magick -density %density% "%input_pdf%" -quality %quality% 
 echo.
 
 :: Confirm before proceeding
-set /p confirm="Proceed with conversion? (Y/N): "
+set /p confirm="Proceed with conversion? (y/N): "
 if /i not "%confirm%"=="Y" if /i not "%confirm%"=="YES" (
-    echo Conversion cancelled.
+    echo .......Conversion cancelled.......
     goto end
 )
 
@@ -189,64 +213,56 @@ echo.
 
 magick -density %density% "%input_pdf%" -quality %quality% "!output_path!%prefix%%%d%output_format%"
 
-:: Check if conversion was successful
-if %errorlevel% equ 0 (
-    echo.
-    echo [SUCCESS] PDF conversion completed successfully!
-    if "!use_subfolder!"=="true" (
-        echo Output files: PDF_Images\%prefix%*%output_format%
-        :: Count and display created files
-        for /f %%i in ('dir /b "PDF_Images\%prefix%*%output_format%" 2^>nul ^| find /c /v ""') do set file_count=%%i
-        if defined file_count (
-            echo Created !file_count! image file(s) in PDF_Images folder.
-        )
-        :: Ask if user wants to open the output folder
-        echo.
-        set /p open_folder="Open PDF_Images folder? (Y/N): "
-        if /i "!open_folder!"=="Y" if /i "!open_folder!"=="YES" (
-            start PDF_Images
-        )
-    ) else (
-        echo Output files: %prefix%*%output_format%
-        :: Count and display created files
-        for /f %%i in ('dir /b "%prefix%*%output_format%" 2^>nul ^| find /c /v ""') do set file_count=%%i
-        if defined file_count (
-            echo Created !file_count! image file(s) in current directory.
-        )
-        :: Ask if user wants to open the output folder
-        echo.
-        set /p open_folder="Open current folder? (Y/N): "
-        if /i "!open_folder!"=="Y" if /i "!open_folder!"=="YES" (
-            start .
-        )
-    )
-) else (
-    echo.
-    echo [ERROR] Conversion failed! Please check the error messages above.
-    echo.
-    echo Common issues:
-    echo - PDF file might be corrupted or password protected
-    echo - Insufficient disk space
-    echo - Invalid parameters
-    echo - ImageMagick configuration issues
-)
+:: Check if conversion was successful (avoid complex parentheses to prevent parser errors)
+if errorlevel 1 goto conversion_failed
 
 echo.
+echo [SUCCESS] PDF conversion completed successfully!
 
-:: Ask if user wants to convert another file
-:another_conversion
-set /p another="Convert another PDF file? (Y/N): "
-if /i "%another%"=="Y" if /i "%another%"=="YES" (
-    echo.
-    echo ==========================================================
-    echo.
-    goto input_section
-)
+if /i "!use_subfolder!"=="true" goto success_subfolder
+goto success_cwd
+
+:success_subfolder
+echo Output files: !output_folder!\%prefix%*%output_format%
+:: Count and display created files
+for /f %%i in ('dir /b "!output_folder!\%prefix%*%output_format%" 2^>nul ^| find /c /v ""') do set file_count=%%i
+if defined file_count echo Created !file_count! image file(s) in !output_folder! folder.
+:: Automatically open the output folder
+echo.
+echo Opening output folder...
+explorer "!output_dir!" >nul 2>&1
+goto post_success
+
+:success_cwd
+echo Output files: %prefix%*%output_format%
+:: Count and display created files
+for /f %%i in ('dir /b "%prefix%*%output_format%" 2^>nul ^| find /c /v ""') do set file_count=%%i
+if defined file_count echo Created !file_count! image file(s) in current directory.
+:: Automatically open the output folder
+echo.
+echo Opening output folder...
+explorer "!output_dir!" >nul 2>&1
+goto post_success
+
+:conversion_failed
+echo.
+echo [ERROR] Conversion failed! Please check the error messages above.
+echo.
+echo Common issues:
+echo - PDF file might be corrupted or password protected
+echo - Insufficient disk space
+echo - Invalid parameters
+echo - ImageMagick configuration issues
+
+:post_success
+
+echo.
 
 :end
 echo.
-echo....................................................
+echo ==========================================================
 echo Thank you for using PDF to Image Converter!
-echo....................................................
+echo ==========================================================
 echo.
-pause
+timeout /t 5 >nul
+exit
