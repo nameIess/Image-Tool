@@ -1,0 +1,95 @@
+# PDF to Image Converter - Git Ignore File
+# ==========================================
+
+# Output Directories (Primary Requirement)
+# -----------------------------------------
+PDF_Images/
+
+# Temporary Files
+# ---------------
+*.log
+*.tmp
+*.temp
+~$*
+*.swp
+*.swo
+
+# System Files
+# ------------
+Thumbs.db
+.DS_Store
+Thumbs.db:encryptable
+ehthumbs.db
+ehthumbs_vista.db
+*.stackdump
+[Dd]esktop.ini
+$RECYCLE.BIN/
+.DS_Store?
+._*
+.Spotlight-V100
+.Trashes
+Icon?
+
+# IDE and Editor Settings
+# -----------------------
+.vscode/
+.idea/
+.vs/
+*.suo
+*.user
+*.userosscache
+*.sln.docstates
+
+# Generated Image Files (Optional - keep converted images out of repo)
+# -------------------------------------------------------------------
+*.png
+*.jpg
+*.jpeg
+*.bmp
+*.tiff
+*.gif
+*.webp
+
+# Common PDF Files (Optional - exclude large PDFs from repo)
+# ----------------------------------------------------------
+*.pdf
+!sample.pdf
+!test.pdf
+!example.pdf
+
+# Additional Temporary and Cache Files
+# ------------------------------------
+*.bak
+*.backup
+*~
+*.orig
+*.cache
+
+# Build and Distribution
+# ----------------------
+dist/
+build/
+release/
+log/
+
+# Log Files (Extended)
+# -------------------
+conversion.log
+error.log
+debug.log
+*.txt
+
+# Windows Specific
+# ----------------
+*.cab
+*.msi
+*.msix
+*.msm
+*.msp
+*.lnk
+
+# Configuration Files (Keep templates, ignore local configs)
+# ----------------------------------------------------------
+config.local.bat
+settings.local.ini
+*.config.user
