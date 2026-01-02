@@ -21,12 +21,47 @@ if %errorlevel% neq 0 (
     exit /b 1
 )
 
+:: Check for PDF files in the script directory and offer to open one
+echo.
+echo -- Local PDF detection --
+set "script_dir=%~dp0"
+set "found=0"
+pushd "%script_dir%" >nul 2>&1
+for %%F in (*.pdf) do (
+    set /a found+=1
+    set "pdf!found!=%%F"
+)
+popd >nul 2>&1
+
+if %found% gtr 0 goto show_pdfs
+goto after_pdf_list
+
+:show_pdfs
+echo Found %found% PDF(s) in script directory:
+for /l %%i in (1,1,%found%) do echo %%i. !pdf%%i!
+echo.
+set /p sel="Select a PDF to use (1-%found%) or press Enter to skip: "
+if "%sel%"=="" goto after_pdf_list
+echo %sel%| findstr /r "^[0-9][0-9]*$" >nul || goto after_pdf_list
+if %sel% lss 1 goto after_pdf_list
+if %sel% gtr %found% goto after_pdf_list
+call set "file_to_open=%%pdf%sel%%%"
+set "input_pdf=%script_dir%!file_to_open!"
+echo Selected: %input_pdf%
+
+:after_pdf_list
+
 :input_section
-echo ┌─ Input Parameters ─┐
+echo -- Input Parameters --
 echo.
 
 :: Get input PDF filename
 :input_pdf
+:: If a PDF was selected above, reuse it and skip prompt
+if defined input_pdf (
+    echo Using selected PDF: %input_pdf%
+    goto validate_input_file
+)
 set /p input_pdf="Enter PDF filename (with extension): "
 if "%input_pdf%"=="" (
     echo [ERROR] Please enter a valid filename!
@@ -34,6 +69,7 @@ if "%input_pdf%"=="" (
 )
 
 :: Check if file exists
+:validate_input_file
 if not exist "%input_pdf%" (
     echo [ERROR] File '%input_pdf%' does not exist!
     echo.
@@ -209,5 +245,8 @@ if /i "%another%"=="Y" if /i "%another%"=="YES" (
 
 :end
 echo.
+echo....................................................
 echo Thank you for using PDF to Image Converter!
+echo....................................................
+echo.
 pause

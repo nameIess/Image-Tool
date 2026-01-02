@@ -5,6 +5,7 @@ A Windows batch script that converts PDF files to various image formats using Im
 ## Features
 
 - ✅ **Interactive User Prompts**: Prompts user for input PDF filename, output format, density, quality, and filename prefix
+- ✅ **Local PDF Detection & Selection**: Automatically lists PDF files in the script's folder at startup and lets you select one to use (skips the filename prompt)
 - ✅ **Automatic Folder Management**: Automatically creates `PDF_Images` folder if it does not exist
 - ✅ **Organized Output**: Saves all converted images inside the `PDF_Images` directory
 - ✅ **Multiple Format Support**: Convert PDF files to PNG, JPG, JPEG, BMP, TIFF, GIF formats
@@ -34,7 +35,7 @@ A Windows batch script that converts PDF files to various image formats using Im
 
    ```cmd
    git clone <repository-url>
-   cd "Pdf to Image"
+   cd pdf_converter
    ```
 
 4. **Verify Installation:**
@@ -47,10 +48,10 @@ A Windows batch script that converts PDF files to various image formats using Im
 ## Project Structure
 
 ```
-Pdf to Image/
+pdf_converter/
 ├── Convert.bat          # Main conversion script
-├── PDF_Images/          # Output directory for converted images
-└── README.md           # This documentation file
+├── README.md            # This documentation file
+└── PDF_Images/          # Output directory for converted images (created on first run)
 ```
 
 ## Usage Instructions
@@ -63,7 +64,24 @@ Pdf to Image/
    Convert.bat
    ```
 
-2. **Follow the Interactive Prompts:**
+2. **Optional: Pick a local PDF (auto-detected):**
+
+   - If there are any `*.pdf` files in the same folder as `Convert.bat`, the script will list them like:
+
+     ```
+     -- Local PDF detection --
+     Found 2 PDF(s) in script directory:
+     1. Example1.pdf
+     2. Example2.pdf
+
+     Select a PDF to use (1-2) or press Enter to skip: 1
+     Selected: F:\Code\pdf_converter\Example1.pdf
+     Using selected PDF: F:\Code\pdf_converter\Example1.pdf
+     ```
+
+   - Enter a number to select and continue. Press Enter to skip and type a filename manually.
+
+3. **Follow the Interactive Prompts:**
 
    - **PDF filename**: Enter the full path or filename (e.g., `document.pdf`)
    - **Output format**: Choose from png, jpg, jpeg, bmp, tiff, gif (default: png)
@@ -71,7 +89,7 @@ Pdf to Image/
    - **Quality**: Set compression quality 1-100 (default: 90)
    - **Filename prefix**: Set prefix for output files (default: Page-)
 
-3. **Review and Confirm:**
+4. **Review and Confirm:**
    - Check the conversion summary
    - Confirm to proceed with conversion
 
@@ -83,9 +101,16 @@ Pdf to Image/
 *                      Using ImageMagick                *
 =========================================================
 
+-- Local PDF detection --
+Found 1 PDF(s) in script directory:
+1. Example.pdf
+
+Select a PDF to use (1-1) or press Enter to skip: 1
+Selected: F:\Code\pdf_converter\Example.pdf
+Using selected PDF: F:\Code\pdf_converter\Example.pdf
+
 ┌─ Input Parameters ─┐
 
-Enter PDF filename (with extension): document.pdf
 Enter output image format (default: png): png
 Enter density value (default: 180): 300
 Enter quality value 1-100 (default: 90): 95
@@ -93,13 +118,13 @@ Enter output filename prefix (default: Page-): Doc-
 
 ┌─ Conversion Summary ─┐
 
-Input PDF:      document.pdf
+Input PDF:      F:\Code\pdf_converter\Example.pdf
 Output format:  .png
 Density:        300
 Quality:        95
 Prefix:         Doc-
 Output folder:  PDF_Images\
-Command:        magick -density 300 "document.pdf" -quality 95 "PDF_Images\Doc-%d.png"
+Command:        magick -density 300 "F:\\Code\\pdf_converter\\Example.pdf" -quality 95 "PDF_Images\Doc-%d.png"
 
 Proceed with conversion? (Y/N): Y
 ```
@@ -111,6 +136,7 @@ Proceed with conversion? (Y/N): Y
 ### Important Notes
 
 - 📁 **Output Location**: All converted images are automatically saved in the `PDF_Images` folder
+- 🗂️ **Local PDF Detection**: At startup, the script scans the script folder for `*.pdf` and lets you pick one. To use a PDF in a different folder, either move it next to `Convert.bat` or enter its full path when prompted.
 - 🔄 **Automatic Folder Creation**: The script creates the `PDF_Images` directory if it doesn't exist
 - 📋 **Multi-page Support**: Each page of the PDF becomes a separate image file
 - 🔢 **File Naming**: Output files use the format: `[prefix][page-number].[format]`
@@ -178,8 +204,5 @@ If you encounter any issues:
 
 ## Version History
 
+- **v1.1** - Added local PDF detection and selection at startup; selected file is used automatically for conversion (no auto-open)
 - **v1.0** - Initial release with basic PDF to image conversion functionality
-
-## Author
-
-Created with ❤️ for easy PDF to image conversion on Windows systems.
