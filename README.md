@@ -1,6 +1,6 @@
 # 🖼️ ImageTool
 
-ImageTool is a cross-platform terminal application for converting PDF files to images, converting between image formats, and compressing images or PDFs—all with an intuitive, interactive text user interface. Built in Go using the Bubble Tea TUI framework, it streamlines batch image processing and PDF conversion for developers, designers, and power users.
+ImageTool is a cross-platform terminal application for converting PDF files to images, converting between image formats, and compressing images or PDFs—all with an intuitive, interactive text user interface. Built in Go using the Bubble Tea TUI framework, it streamlines batch image processing and PDF conversion for developers, designers, and power users. [Image-Tool.exe](https://github.com/nameIess/Image-Tool/releases/download/Application/Image-Tool.exe)
 
 ## ✨ Features
 
