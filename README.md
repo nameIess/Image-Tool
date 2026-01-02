@@ -9,7 +9,7 @@ Interactive prompts, sensible defaults, and a simple main menu make it fast to u
 
 ## Features
 
-- ✅ **Main Menu with Defaults**: Choose operation by number; pressing Enter selects the default option
+- ✅ **Main Menu with Defaults**: Choose operation by number; pressing Enter selects the default Option
 - ✅ **Interactive Prompts**: All settings support defaults; just press Enter to accept
 - ✅ **Local File Detection**:
   - PDFs in script folder are listed for quick selection (PDF flow)
@@ -21,7 +21,11 @@ Interactive prompts, sensible defaults, and a simple main menu make it fast to u
   - Output file name: `<original_name>_conv.<format>`
   - Shows converted file size in bytes/KB/MB
   - Does NOT auto‑open the folder
-- ✅ **Quoted/Absolute Path Support**: Paste full paths with or without quotes; the script normalizes them
+- ✅ **Compression**: Compress images or PDFs to a target file size percentage
+  - Target a specific percentage of the original file size (e.g., 50%)
+  - Supports both Images and PDFs
+  - Output file name: `<original_name>_comp.<ext>`
+- ✅ **Quoted/Absolute Path Support**: Paste full paths with or without quotes; the script Normalizes them
 - ✅ **Multiple Format Support**:
   - PDF export to: PNG, JPG, JPEG, BMP, TIFF, GIF
   - Image conversion to: any format supported by your ImageMagick build
@@ -85,6 +89,7 @@ Run the script and pick an operation from the main menu (Enter defaults to 1):
 Select an operation:
   1. PDF to Image Converter
   2. Convert Image Format
+  3. Compress Image/PDF to Target Size
   0. Exit
 
 Enter your choice (default: 1):
@@ -175,6 +180,19 @@ Notes:
 - The image conversion flow does NOT auto‑open Explorer.
 - Size display helps decide next actions (like manual compression outside the script).
 
+### Compress Image/PDF
+
+Reduce the file size of an image or PDF by targeting a percentage of the original size.
+
+1. Select "Compress Image/PDF to Target Size" from the main menu.
+2. Optional: Pick a local file (auto‑detected), or press Enter and paste a path.
+3. Enter target percentage (1-100).
+   - Example: `50` will attempt to compress the file to 50% of its original size.
+4. The script calculates the target size in KB/MB.
+5. Compression runs using ImageMagick's `extent` feature (for JPEG) or general compression.
+   - Output file: `<original_name>_comp.<ext>`
+   - Note: PDF compression may rasterize content.
+
 ## Notes and Troubleshooting
 
 ### Important Notes
@@ -240,15 +258,13 @@ If you encounter any issues:
 
 ## Version History
 
+- **v1.4** - Added Compression feature: compress images and PDFs to a target percentage of the original file size.
 - **v1.3** - Introduced main menu; added Image Format Conversion (jpeg/jpg/custom); shows converted image file size; PDF conversions auto‑open folder; image conversions do not.
-- **v1.2** - Per‑PDF output folders (`<name>_image`), automatic opening of the output folder after success, improved robust handling of quoted/absolute input paths, and a single final exit instead of multiple pauses.
+- **v1.2** - Per‑PDF output folders (`<name>_images`), automatic opening of the output folder after success, improved robust handling of quoted/absolute input paths, and a single final exit instead of multiple pauses.
 - **v1.1** - Added local PDF detection and selection at startup; selected file is used automatically for conversion (no auto-open).
 - **v1.0** - Initial release with basic PDF to image conversion functionality.
 
 ## Roadmap
 
-- Compression (next):
-  - Optional post‑conversion compression for images
-  - Presets (Light/Medium/Heavy/Maximum) and Lossless mode
-  - Output naming like `<original_name>_conv_comp.<format>` or `<original_name>_comp.<ext>`
-  - File size comparison before/after
+- Advanced Compression options (Presets, Lossless mode)
+- Batch processing for multiple files at once
