@@ -1,0 +1,50 @@
+name: Feature Request 🫂
+description: Suggest new features or improvements for {{ .ProjectName }}
+assignees: [nameIess]
+labels: ["enhancement", "feature"]
+body:
+  - type: markdown
+    attributes:
+      value: |
+        ### Share your idea! 💡
+        Help us understand how to make {{ .ProjectName }} better for everyone by suggesting new ideas or improvements.
+
+  - type: textarea
+    id: problem_use_case
+    attributes:
+      label: 🧩 Problem / Use Case
+      description: "What problem are you facing, or what gap in functionality are you trying to fill?"
+      placeholder: "e.g., Currently, there is no way to export data in JSON format, which makes automation difficult..."
+    validations:
+      required: true
+
+  - type: textarea
+    id: expected_output
+    attributes:
+      label: 📤 Proposed Feature / Behavior
+      description: "Describe the solution you'd like to see. What should happen once this is implemented?"
+      placeholder: |
+        - New command: `{{ .ProjectName }} export --json`
+        - Expected output: A file containing the structured data
+        - Configuration options: Ability to specify the output path
+    validations:
+      required: true
+
+  - type: textarea
+    id: alternatives
+    attributes:
+      label: 🔄 Alternatives / Workarounds
+      description: "Have you tried another way to achieve this? Why wasn’t it sufficient?"
+      placeholder: |
+        - Used a manual conversion script, but it is error-prone
+        - Tried a third-party tool, but it doesn't integrate with the {{ .ProjectName }} ecosystem
+    validations:
+      required: false
+
+  - type: textarea
+    id: context
+    attributes:
+      label: 🧾 Additional Context
+      description: "Any other context or screenshots about the feature request here."
+    validations:
+      required: false
