@@ -1,16 +1,16 @@
-# ImageTool
+# 🖼️ ImageTool
 
 ImageTool is a cross-platform terminal application for converting PDF files to images, converting between image formats, and compressing images or PDFs—all with an intuitive, interactive text user interface. Built in Go using the Bubble Tea TUI framework, it streamlines batch image processing and PDF conversion for developers, designers, and power users.
 
-## Features
+## ✨ Features
 
-- **PDF to Image Converter** - Convert PDF pages to images (PNG, JPG, BMP, TIFF, GIF)
-- **Image Format Converter** - Convert between image formats (PNG, JPG, WebP, AVIF, BMP, TIFF, GIF)
-- **Image/PDF Compressor** - Reduce file size by percentage or target size
-- **Interactive TUI** - Beautiful terminal interface with keyboard navigation
-- **Built-in File Picker** - Browse and select files without leaving the app
+- 📄 **PDF to Image Converter** - Convert PDF pages to images (PNG, JPG, BMP, TIFF, GIF)
+- 🖼️ **Image Format Converter** - Convert between image formats (PNG, JPG, WebP, AVIF, BMP, TIFF, GIF)
+- 🗜️ **Image/PDF Compressor** - Reduce file size by percentage or target size
+- 🖥️ **Interactive TUI** - Beautiful terminal interface with keyboard navigation
+- 📁 **Built-in File Picker** - Browse and select files without leaving the app
 
-## Screenshots
+## 🖥️ Screenshots
 
 ```
 ┌─────────────────────────────────────────────────────────────┐
@@ -34,11 +34,11 @@ ImageTool is a cross-platform terminal application for converting PDF files to i
 └─────────────────────────────────────────────────────────────┘
 ```
 
-## Prerequisites
+## ⚙️ Prerequisites
 
 Before using ImageTool, install the following dependencies:
 
-### 1. ImageMagick (Required)
+### 1️⃣ ImageMagick (Required)
 
 ImageMagick is used for all image processing operations.
 
@@ -59,7 +59,7 @@ brew install imagemagick
 sudo apt install imagemagick
 ```
 
-### 2. Ghostscript (Required for PDF operations)
+### 2️⃣ Ghostscript (Required for PDF operations)
 
 Ghostscript enables PDF to image conversion.
 
@@ -80,20 +80,20 @@ brew install ghostscript
 sudo apt install ghostscript
 ```
 
-### 3. Verify Installation
+### 3️⃣ Verify Installation
 
 ```bash
 magick -version
 gs --version  # or gswin64c --version on Windows
 ```
 
-## Installation
+## 🛠️ Installation
 
-### Option 1: Download Pre-built Binary
+### 1️⃣ Option 1: Download Pre-built Binary
 
 Download the latest release from the [Releases](https://github.com/nameIess/Image-Tool/releases) page.
 
-### Option 2: Build from Source
+### 2️⃣ Option 2: Build from Source
 
 **Requirements:** Go 1.21 or higher
 
@@ -127,15 +127,15 @@ GOOS=darwin GOARCH=arm64 go build -o Image-Tool-darwin-arm64 ./cmd/imagetool
 GOOS=linux GOARCH=amd64 go build -o Image-Tool-linux-amd64 ./cmd/imagetool
 ```
 
-### Option 3: Install with Go
+### 3️⃣ Option 3: Install with Go
 
 ```bash
 go install github.com/nameIess/Image-Tool/cmd/imagetool@latest
 ```
 
-## Usage
+## 🚀 Usage
 
-### Run the Application
+### ▶️ Run the Application
 
 ```bash
 # Windows
@@ -145,7 +145,7 @@ Image-Tool.exe
 ./Image-Tool
 ```
 
-### Keyboard Navigation
+### ⌨️ Keyboard Navigation
 
 | Key                 | Action                                |
 | ------------------- | ------------------------------------- |
@@ -156,9 +156,9 @@ Image-Tool.exe
 | `q` / `Ctrl+C`      | Quit                                  |
 | `o`                 | Open output folder (after conversion) |
 
-## Features in Detail
+## 🔍 Features in Detail
 
-### PDF to Image Converter
+### 📄 PDF to Image Converter
 
 Convert multi-page PDFs to individual image files.
 
@@ -171,7 +171,7 @@ Convert multi-page PDFs to individual image files.
 
 **Output:** Files are saved to `<PDF_name>_image/` folder
 
-### Image Format Converter
+### 🖼️ Image Format Converter
 
 Convert images between different formats.
 
@@ -179,7 +179,7 @@ Convert images between different formats.
 
 **Output:** `<original_name>_conv.<new_format>`
 
-### Image/PDF Compressor
+### 🗜️ Image/PDF Compressor
 
 Reduce file size using two methods:
 
@@ -188,7 +188,7 @@ Reduce file size using two methods:
 
 **Output:** `<original_name>_comp.<ext>`
 
-## Project Structure
+## 🗂️ Project Structure
 
 ```
 imagetool/
@@ -213,9 +213,9 @@ imagetool/
 └── README.md
 ```
 
-## Development
+## 👨‍💻 Development
 
-### Building with Version Info (Windows)
+### 🏗️ Building with Version Info (Windows)
 
 To embed version information in the Windows executable:
 
@@ -232,48 +232,48 @@ cd ../..
 go build -o Image-Tool.exe ./cmd/imagetool
 ```
 
-### Running Tests
+### 🧪 Running Tests
 
 ```bash
 go test ./...
 ```
 
-### Code Formatting
+### 🎨 Code Formatting
 
 ```bash
 go fmt ./...
 ```
 
-## Troubleshooting
+## 🛠️ Troubleshooting
 
-### "magick: command not found"
+### ❌ "magick: command not found"
 
 ImageMagick is not installed or not in your PATH.
 
 - **Windows:** Reinstall and check "Add to PATH"
 - **macOS/Linux:** Ensure `/usr/local/bin` is in your PATH
 
-### "gs: command not found" (PDF conversion fails)
+### ❌ "gs: command not found" (PDF conversion fails)
 
 Ghostscript is not installed.
 
 - Install Ghostscript from the prerequisites section
 
-### Conversion produces blank images
+### ⚠️ Conversion produces blank images
 
 - Increase the **density** (DPI) value
 - Ensure the PDF is not password-protected
 
-## Dependencies
+## 📦 Dependencies
 
 - [Bubble Tea](https://github.com/charmbracelet/bubbletea) - TUI framework
 - [Bubbles](https://github.com/charmbracelet/bubbles) - TUI components
 - [Lip Gloss](https://github.com/charmbracelet/lipgloss) - Style definitions
 
-## License
+## 📄 License
 
 This project is licensed under the MIT License - see the [LICENSE](LICENSE) file for details.
 
-## Contributing
+## 🤝 Contributing
 
 Contributions are welcome! Please feel free to submit a Pull Request.
