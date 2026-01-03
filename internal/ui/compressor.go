@@ -52,7 +52,7 @@ type CompressorModel struct {
 	unitInput    textinput.Model
 
 	// Fixed size state
-	sizeValue int
+	sizeValue float64
 	sizeUnit  string // B, KB, MB
 
 	// Results
@@ -199,6 +199,40 @@ func (m *CompressorModel) Update(msg tea.Msg) (*CompressorModel, tea.Cmd) {
 		return m, cmd
 
 	case CompressStepSetFixedSize:
+		// Check if unit input is focused FIRST
+		if m.unitInput.Focused() {
+			switch msg := msg.(type) {
+			case tea.KeyMsg:
+				switch msg.String() {
+				case "enter":
+					unit := strings.ToUpper(m.unitInput.Value())
+					if unit == "" {
+						unit = "KB"
+					}
+					m.sizeUnit = unit
+
+					switch m.sizeUnit {
+					case "MB":
+						m.targetBytes = int64(m.sizeValue * 1024 * 1024)
+					case "KB":
+						m.targetBytes = int64(m.sizeValue * 1024)
+					default:
+						m.targetBytes = int64(m.sizeValue)
+					}
+					m.step = CompressStepConfirm
+					m.unitInput.Blur()
+					return m, nil
+				case "esc":
+					m.unitInput.Blur()
+					m.sizeInput.Focus()
+					return m, textinput.Blink
+				}
+			}
+			m.unitInput, cmd = m.unitInput.Update(msg)
+			return m, cmd
+		}
+
+		// Handle size input
 		switch msg := msg.(type) {
 		case tea.KeyMsg:
 			switch msg.String() {
@@ -208,15 +242,15 @@ func (m *CompressorModel) Update(msg tea.Msg) (*CompressorModel, tea.Cmd) {
 				if val == "" {
 					m.sizeValue = 100
 				} else {
-					parsedSize, err := strconv.Atoi(val)
+					parsedSize, err := strconv.ParseFloat(val, 64)
 					if err != nil {
 						m.sizeValue = 100
 					} else {
 						m.sizeValue = parsedSize
 					}
 				}
-				if m.sizeValue < 1 {
-					m.sizeValue = 1
+				if m.sizeValue < 0.01 {
+					m.sizeValue = 0.01
 				}
 
 				// Ask for unit
@@ -231,11 +265,11 @@ func (m *CompressorModel) Update(msg tea.Msg) (*CompressorModel, tea.Cmd) {
 
 			case "k", "K":
 				if m.sizeInput.Value() != "" {
-					parsedSize, err := strconv.Atoi(m.sizeInput.Value())
+					parsedSize, err := strconv.ParseFloat(m.sizeInput.Value(), 64)
 					if err == nil {
 						m.sizeValue = parsedSize
 						m.sizeUnit = "KB"
-						m.targetBytes = int64(m.sizeValue) * 1024
+						m.targetBytes = int64(m.sizeValue * 1024)
 						m.step = CompressStepConfirm
 						m.sizeInput.Blur()
 					}
@@ -243,11 +277,11 @@ func (m *CompressorModel) Update(msg tea.Msg) (*CompressorModel, tea.Cmd) {
 				}
 			case "m", "M":
 				if m.sizeInput.Value() != "" {
-					parsedSize, err := strconv.Atoi(m.sizeInput.Value())
+					parsedSize, err := strconv.ParseFloat(m.sizeInput.Value(), 64)
 					if err == nil {
 						m.sizeValue = parsedSize
 						m.sizeUnit = "MB"
-						m.targetBytes = int64(m.sizeValue) * 1024 * 1024
+						m.targetBytes = int64(m.sizeValue * 1024 * 1024)
 						m.step = CompressStepConfirm
 						m.sizeInput.Blur()
 					}
@@ -255,7 +289,7 @@ func (m *CompressorModel) Update(msg tea.Msg) (*CompressorModel, tea.Cmd) {
 				}
 			case "b", "B":
 				if m.sizeInput.Value() != "" {
-					parsedSize, err := strconv.Atoi(m.sizeInput.Value())
+					parsedSize, err := strconv.ParseFloat(m.sizeInput.Value(), 64)
 					if err == nil {
 						m.sizeValue = parsedSize
 						m.sizeUnit = "B"
@@ -486,7 +520,7 @@ func (m *CompressorModel) View() string {
 		b.WriteString("\n\n")
 
 		if m.unitInput.Focused() {
-			b.WriteString(fmt.Sprintf("Size: %d ", m.sizeValue))
+			b.WriteString(fmt.Sprintf("Size: %.2g ", m.sizeValue))
 			b.WriteString(m.unitInput.View())
 			b.WriteString("\n\n")
 			b.WriteString(descriptionStyle.Render("Enter unit: B, KB, or MB"))
@@ -507,7 +541,7 @@ func (m *CompressorModel) View() string {
 		targetStr := fmt.Sprintf("%d%% of original", m.targetPercent)
 		if m.method == core.CompressMethodFixedSize {
 			methodStr = "Fixed Size"
-			targetStr = fmt.Sprintf("%d %s", m.sizeValue, m.sizeUnit)
+			targetStr = fmt.Sprintf("%.2g %s", m.sizeValue, m.sizeUnit)
 		}
 
 		summaryBox := boxStyle.Render(
