@@ -54,7 +54,6 @@ Desktop.ini
 # Debug & Logs
 # ================================
 *.log
-log/
 debug_page.html
 debug_*.html
 
