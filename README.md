@@ -12,45 +12,6 @@ A Windows TUI (Terminal User Interface) application for image and PDF processing
 - 📁 **Batch Processing** - Process entire folders of files
 - 🔄 **Drag-and-Drop Support** - Windows drag-and-drop functionality
 
-## 🏗️ Architecture
-
-```
-Image-Tool/
-├── cmd/
-│   └── imagetool/          # Application entrypoint only
-│       └── main.go
-├── internal/
-│   ├── ui/                 # TUI rendering and input handling
-│   │   ├── app.go          # Main application model
-│   │   ├── filepicker.go   # File selection component
-│   │   ├── pdf_converter.go
-│   │   ├── format_converter.go
-│   │   ├── compressor.go
-│   │   └── styles.go       # UI styling
-│   ├── core/               # Business logic (conversion, compression)
-│   │   └── core.go
-│   ├── deps/               # External tool detection
-│   │   └── deps.go
-│   ├── config/             # Persistent configuration
-│   │   └── config.go
-│   └── logging/            # Error and activity logging
-│       └── logging.go
-└── go.mod
-```
-
-### Layer Responsibilities
-
-| Layer              | Responsibility                                               |
-| ------------------ | ------------------------------------------------------------ |
-| `cmd`              | Application entrypoint only - no business logic              |
-| `internal/ui`      | TUI rendering and input handling - no system commands        |
-| `internal/core`    | Conversion, compression, and workflow logic - no TUI code    |
-| `internal/deps`    | External tool detection and version checks - no UI rendering |
-| `internal/config`  | Persistent configuration via file                            |
-| `internal/logging` | Error and activity logging                                   |
-
-## ⚙️ Dependencies
-
 ### ImageMagick (Required)
 
 ImageMagick v7.x is required for all image processing operations.
@@ -183,35 +144,6 @@ Reduce file size using two methods:
 2. **Fixed Size:** Target a specific file size (e.g., 500KB, 2MB)
 
 **Output:** `<original_name>_comp.<ext>`
-
-## 🗂️ Project Structure
-
-```
-Image-Tool/
-├── cmd/
-│   └── imagetool/
-│       └── main.go              # Application entry point
-├── internal/
-│   ├── ui/                      # TUI layer
-│   │   ├── app.go               # Main TUI application
-│   │   ├── filepicker.go        # File browser component
-│   │   ├── pdf_converter.go     # PDF to image converter UI
-│   │   ├── format_converter.go  # Image format converter UI
-│   │   ├── compressor.go        # File compressor UI
-│   │   └── styles.go            # UI styles and themes
-│   ├── core/                    # Business logic
-│   │   └── core.go              # Conversion and processing logic
-│   ├── deps/                    # Dependency detection
-│   │   └── deps.go              # Tool availability checks
-│   ├── config/                  # Configuration
-│   │   └── config.go            # Settings and defaults
-│   └── logging/                 # Logging
-│       └── logging.go           # Error and activity logging
-├── go.mod
-├── go.sum
-├── LICENSE
-└── README.md
-```
 
 ## 🔒 Security
 
